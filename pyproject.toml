@@ -1,0 +1,49 @@
+[build-system]
+requires = ['hatchling']
+build-backend = 'hatchling.build'
+
+[project]
+name = 'deeprl'
+description = 'My own implementation of deep reinforcement learning algorithms.'
+license = 'ISC'
+authors = [
+  { name = 'Minghong Xu', email = '86758413+MinghongAlexXu@users.noreply.github.com' },
+]
+version = '0.0.0'
+classifiers = [
+  'Private :: Do Not Upload',
+  'Development Status :: 1 - Planning',
+  'Topic :: Scientific/Engineering :: Artificial Intelligence',
+  'Intended Audience :: Science/Research',
+  'Natural Language :: English',
+  'Operating System :: OS Independent',
+  'Environment :: GPU :: NVIDIA CUDA :: 11.7',
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 3.10',
+  'Programming Language :: Python :: 3.11',
+  'Programming Language :: Python :: Implementation :: CPython',
+  'Typing :: Typed',
+]
+requires-python = '>=3.10'
+dependencies = [
+  'gymnasium[classic_control,mujoco]',
+  'pettingzoo[mpe]',
+  'torch',
+  'toolz',
+  'cytoolz',
+  'attrs',
+]
+
+[project.optional-dependencies]
+dev = [
+  'debugpy',
+  'mypy',
+  'py-spy',
+  'scalene',
+  'torch-tb-profiler',
+]
+optim = [
+  'numba',
+  'cupy-cuda11x',
+]
+

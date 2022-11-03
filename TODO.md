@@ -1,0 +1,1 @@
+- [ ] Fix `pip-compile gym[classic_control] -> gym[classic-control]`. See https://github.com/jazzband/pip-tools/issues/1576 for more details. For now I just manually replace the hyphen with the undersocre in `dev-requirements.txt`.
