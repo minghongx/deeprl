@@ -18,13 +18,11 @@ classifiers = [
   'Natural Language :: English',
   'Operating System :: OS Independent',
   'Environment :: GPU :: NVIDIA CUDA :: 11.7',
-  'Programming Language :: Python',
   'Programming Language :: Python :: 3.10',
-  'Programming Language :: Python :: 3.11',
   'Programming Language :: Python :: Implementation :: CPython',
   'Typing :: Typed',
 ]
-requires-python = '>=3.10'
+requires-python = '~=3.10'
 dependencies = [
   'torch',
   'toolz',
