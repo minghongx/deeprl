@@ -106,7 +106,7 @@ rich==12.6.0
     # via scalene
 rsa==4.9
     # via google-auth
-scalene==1.5.13
+scalene==1.5.14
     # via deeprl (pyproject.toml)
 six==1.16.0
     # via
@@ -137,7 +137,7 @@ urllib3==1.26.12
     # via requests
 werkzeug==2.2.2
     # via tensorboard
-wheel==0.37.1
+wheel==0.38.1
     # via tensorboard
 
 # The following packages are considered to be unsafe in a requirements file:
