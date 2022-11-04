@@ -1,4 +1,4 @@
-.PHONY: venv rqmts dev-rqmts all-rqmts sync clean install build
+.PHONY: venv install clean rqmts dev-rqmts all-rqmts sync build
 .ONESHELL:
 
 SHELL = bash
@@ -11,6 +11,14 @@ venv:
 	source $(venv_name)/bin/activate
 	python -m pip install --upgrade pip
 	python -m pip install pip-tools
+
+install:
+	# https://setuptools.pypa.io/en/latest/userguide/development_mode.html
+	python3 -m pip install $(torch_repo) --editable .
+
+clean:
+	rm -rf $(venv_name)
+	find -iname "*.pyc" -delete
 
 if-in-venv:
 ifndef VIRTUAL_ENV
@@ -26,16 +34,8 @@ dev-rqmts: if-in-venv
 all-rqmts: if-in-venv
 	pip-compile $(torch_repo) --all-extras --output-file=all-requirements.txt pyproject.toml
 
-sync:
+sync: if-in-venv
 	$(error Not implemented)
 
-clean:
-	rm -rf $(venv_name)
-	find -iname "*.pyc" -delete
-
-install: if-in-venv
-	# https://setuptools.pypa.io/en/latest/userguide/development_mode.html
-	python -m pip install --editable .
-
-build:
+build: if-in-venv
 	python -m build

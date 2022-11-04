@@ -26,8 +26,6 @@ classifiers = [
 ]
 requires-python = '>=3.10'
 dependencies = [
-  'gymnasium[classic_control,mujoco]',
-  'pettingzoo[mpe]',
   'torch',
   'toolz',
   'cytoolz',
@@ -36,14 +34,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  'gymnasium[classic_control,mujoco]',
+  'pettingzoo[mpe]',
   'debugpy',
   'mypy',
   'py-spy',
   'scalene',
   'torch-tb-profiler',
 ]
-optim = [
-  'numba',
-  'cupy-cuda11x',
-]
-
