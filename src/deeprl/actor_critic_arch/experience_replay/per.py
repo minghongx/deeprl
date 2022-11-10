@@ -4,7 +4,7 @@ import numpy as np
 from torch import Tensor
 
 from .base import ExperienceReplay, Experience, Batch
-from ...data_structures.sum_tree import SumTree
+from ...data_structures import SumTree
 
 
 class PER(ExperienceReplay):

@@ -2,7 +2,7 @@ import numpy as np
 from torch import Tensor
 
 from .base import ExperienceReplay, Experience, Batch
-from ...data_structures.rotating_list import RotatingList
+from ...data_structures import RotatingList
 
 
 class UER(ExperienceReplay):

@@ -14,8 +14,7 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
 from .neural_network.mlp import Actor, Critic
-# FIXME: Import from module package directly
-from .experience_replay.base import ExperienceReplay
+from .experience_replay import ExperienceReplay
 from .noise_injection.action_space import Gaussian
 
 

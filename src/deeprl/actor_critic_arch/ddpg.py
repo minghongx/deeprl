@@ -8,9 +8,8 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
 from .neural_network.mlp import Actor, Critic
-# FIXME: Import from module package directly
-from .experience_replay.base import ExperienceReplay
-from .experience_replay.per import PER
+from .experience_replay import ExperienceReplay
+from .experience_replay import PER
 from .noise_injection.action_space import ActionNoise
 from .noise_injection.parameter_space import AdaptiveParameterNoise
 
