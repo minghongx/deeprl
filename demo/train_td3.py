@@ -9,7 +9,7 @@ import hydra
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import DictConfig
 
-from config import EnvConfig, TD3Config
+from .conf import EnvConfig, TD3Config
 from deeprl.actor_critic_arch.td3 import TD3
 from deeprl.actor_critic_arch.neural_network.mlp import Actor, Critic
 from deeprl.actor_critic_arch.experience_replay.uer import UER
