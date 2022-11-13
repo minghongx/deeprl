@@ -3,7 +3,7 @@
 
 SHELL = bash
 venv_name = .venv
-torch_repo = --extra-index-url=https://download.pytorch.org/whl/cu116
+torch_repo = --extra-index-url=https://download.pytorch.org/whl/cu117
 
 venv:
 	# Create the venv if it does not exist
