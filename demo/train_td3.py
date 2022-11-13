@@ -40,8 +40,8 @@ def train(cfg: DictConfig) -> None:
         td3_conf.stddev
     )
 
-    checkpoint_dir = Path.cwd()/'.checkpoints'/'TD3'/f'{env.spec.name}-v{env.spec.version}'/f'{datetime.now().strftime("%Y%m%d%H%M")}'
-    with SummaryWriter(log_dir=Path.cwd()/'.logs'/'TD3'/f'{env.spec.name}-v{env.spec.version}'/f'{datetime.now().strftime("%Y%m%d%H%M")}') as writer:
+    checkpoint_dir = Path(__file__).resolve().parent/'.checkpoints'/'TD3'/f'{env.spec.name}-v{env.spec.version}'/f'{datetime.now().strftime("%Y%m%d%H%M")}'
+    with SummaryWriter(log_dir=Path(__file__).resolve().parent/'.logs'/'TD3'/f'{env.spec.name}-v{env.spec.version}'/f'{datetime.now().strftime("%Y%m%d%H%M")}') as writer:
         for episode in range(env_conf.num_episodes):
             state, _ = env.reset()
             state = torch.tensor(state, device=device, dtype=torch.float32)
