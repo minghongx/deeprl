@@ -4,7 +4,9 @@ https://github.com/sfujim/TD3/blob/master/TD3.py
 """
 
 from copy import deepcopy
-from collections.abc import Callable, Iterator
+# from collections.abc import Callable, Iterator
+from typing import Callable, Iterator  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
+from typing import Union  # TODO: Unnecessary since version 3.10. See PEP 604.
 from itertools import count
 
 import torch
@@ -30,7 +32,7 @@ class TD3:
             batch_size: int,
             discount_factor: float,
             polyak: float,
-            policy_noise: Gaussian | None,
+            policy_noise: Union[Gaussian, None],
             clip_bound: float,
             stddev: float,
             num_critics: int = 2,
@@ -113,10 +115,11 @@ class TD3:
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
         action = self._policy(state)
-        match self._policy_noise:
-            case Gaussian():
-                action += self._policy_noise(action.size(), action.device)
-                action.clamp_(-1, 1)  # Output layer of actor network is tanh activated; hence the valid action range is [-1, 1]
-            case _:
-                pass
+        # TODO: Avaliable since version 3.10. See PEP 634
+        # match self._policy_noise:
+        #     case Gaussian():
+        #     case _:
+        if isinstance(self._policy_noise, Gaussian):
+            action += self._policy_noise(action.size(), action.device)
+            action.clamp_(-1, 1)  # Output layer of actor network is tanh activated; hence the valid action range is [-1, 1]
         return action

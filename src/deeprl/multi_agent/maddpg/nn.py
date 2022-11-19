@@ -1,4 +1,5 @@
-from collections.abc import Iterable
+# from collections.abc import Iterable
+from typing import Iterable, Tuple, List  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
 from typing import TypeVar
 
 import torch
@@ -59,7 +60,7 @@ class Actor(nn.Module):
 
 class Critic(nn.Module):
 
-    Tensors = TypeVar('Tensors', tuple[Tensor, ...], list[Tensor])
+    Tensors = TypeVar('Tensors', Tuple[Tensor, ...], List[Tensor])
 
     def __init__(self,
             state_dim: int,

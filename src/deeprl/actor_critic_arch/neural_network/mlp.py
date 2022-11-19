@@ -1,4 +1,5 @@
-from collections.abc import Iterable
+# from collections.abc import Iterable
+from typing import Iterable  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
 
 import torch
 import torch.nn as nn

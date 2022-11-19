@@ -30,8 +30,11 @@ class AdaptiveParameterNoise:
     @torch.no_grad()
     def adapt(self, action: Tensor, perturbed_action: Tensor) -> None:
         stddev = compose(torch.sqrt, torch.mean, torch.square)(action - perturbed_action)
-        match stddev:
-            case _ if stddev > self.desired_stddev:
-                self.stddev *= self.adoption_coefficient
-            case _ if stddev < self.desired_stddev:
-                self.stddev /= self.adoption_coefficient
+        # TODO: Avaliable since version 3.10. See PEP 634
+        # match stddev:
+            # case _ if stddev > self.desired_stddev:
+            # case _ if stddev < self.desired_stddev:
+        if stddev > self.desired_stddev:
+            self.stddev *= self.adoption_coefficient
+        elif stddev < self.desired_stddev:
+            self.stddev /= self.adoption_coefficient

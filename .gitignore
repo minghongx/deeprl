@@ -1,6 +1,3 @@
-# Virtual environment
-.venv/
-
 # Hydra outputs
 outputs/
 

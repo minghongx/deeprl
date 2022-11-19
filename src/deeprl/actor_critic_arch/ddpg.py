@@ -1,5 +1,6 @@
 from copy import deepcopy
-from collections.abc import Callable, Iterator
+# from collections.abc import Callable, Iterator
+from typing import Callable, Iterator, Union  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
 
 import torch
 import torch.nn.functional as F
@@ -25,7 +26,7 @@ class DDPG:
             batch_size: int,
             discount_factor: float,
             polyak: float,
-            policy_noise: ActionNoise | AdaptiveParameterNoise | None
+            policy_noise: Union[ActionNoise, AdaptiveParameterNoise, None]
     ) -> None:
 
         # TODO: @property ? e.g. validate polyak ∈ [0, 1] in setter
@@ -98,15 +99,17 @@ class DDPG:
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
         action = self._policy(state)
-        match self._policy_noise:
-            case ActionNoise():
-                action += self._policy_noise(action.size(), action.device)
-                action.clamp_(-1, 1)  # Output layer of policy network is tanh activated; hence the valid action range is [-1, 1]
-            case AdaptiveParameterNoise():
-                perturbed_policy  = self._policy_noise.perturb(self._policy)
-                perturbed_action = perturbed_policy(state)
-                self._policy_noise.adapt(action, perturbed_action)
-                action = perturbed_action
-            case _:
-                pass
+        # TODO: Avaliable since version 3.10. See PEP 634
+        # match self._policy_noise:
+        #     case ActionNoise():
+        #     case AdaptiveParameterNoise():
+        #     case _:
+        if isinstance(self._policy_noise, ActionNoise):
+            action += self._policy_noise(action.size(), action.device)
+            action.clamp_(-1, 1)  # Output layer of policy network is tanh activated; hence the valid action range is [-1, 1]
+        if isinstance(self._policy_noise, AdaptiveParameterNoise):
+            perturbed_policy  = self._policy_noise.perturb(self._policy)
+            perturbed_action = perturbed_policy(state)
+            self._policy_noise.adapt(action, perturbed_action)
+            action = perturbed_action
         return action

@@ -45,7 +45,7 @@ clean-build:  # removes build artifacts
 .ONESHELL:
 venv:
 	# Create the venv if it does not exist
-	test -d $(venv_name) || virtualenv --python `which python3.10` $(venv_name)
+	test -d $(venv_name) || virtualenv --python `which python3.8` $(venv_name)
 	source $(venv_name)/bin/activate
 	python -m pip install --upgrade pip
 	python -m pip install pip-tools

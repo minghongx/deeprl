@@ -1,6 +1,7 @@
 # https://github.com/pfnet/pfrl/blob/master/pfrl/collections/prioritized.py
 
 from typing import TypeVar, Generic, Sized
+from typing import Tuple  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
 
 import numpy as np
 
@@ -17,7 +18,7 @@ class SumTree(Sized, Generic[_T]):
         self._leaves  = RotatingList[_T](capacity)
         self._bias    = len(self._weights) - capacity
 
-    def retrieve(self, value: float) -> tuple[int, _T]:
+    def retrieve(self, value: float) -> Tuple[int, _T]:
         parent = 0
         while True:
             left  = parent * 2 + 1

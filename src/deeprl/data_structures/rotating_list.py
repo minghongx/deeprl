@@ -1,4 +1,5 @@
 from typing import TypeVar, Sequence, Generic, cast
+from typing import List  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
 
 
 _T = TypeVar('_T')
@@ -11,7 +12,7 @@ class RotatingList(Sequence[_T], Generic[_T]):
     """
 
     def __init__(self, capacity: int) -> None:
-        self._list = cast( list[_T], [None for _ in range(capacity)] )  # "cast" is a helper function that overrides the inferred
+        self._list = cast( List[_T], [None for _ in range(capacity)] )  # "cast" is a helper function that overrides the inferred
         self._capacity = capacity
         self._next_idx: int = 0
         self._size : int = 0

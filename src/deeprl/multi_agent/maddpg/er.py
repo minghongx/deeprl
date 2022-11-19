@@ -1,5 +1,6 @@
 from dataclasses import dataclass, fields
-from collections.abc import Mapping
+# from collections.abc import Mapping
+from typing import Mapping, List  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -28,7 +29,7 @@ class Experience:
 
 @define
 class Batch:
-    experiences: list[Experience]
+    experiences: List[Experience]
     observations     : Mapping[AgentID, Tensor] = field(init=False)
     actions          : Mapping[AgentID, Tensor] = field(init=False)
     rewards          : Mapping[AgentID, Tensor] = field(init=False)

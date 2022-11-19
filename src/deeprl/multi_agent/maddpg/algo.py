@@ -1,5 +1,6 @@
 from copy import deepcopy
-from collections.abc import Callable, Iterator, Mapping
+# from collections.abc import Callable, Iterator, Mapping
+from typing import Callable, Iterator, Mapping  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
 
 import torch
 import torch.nn.functional as F

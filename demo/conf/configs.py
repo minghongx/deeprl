@@ -1,3 +1,5 @@
+from typing import List  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
+
 from pydantic import BaseModel, validator
 from omegaconf import OmegaConf
 
@@ -9,7 +11,7 @@ class EnvConfig(BaseModel):
 
 
 class TD3Config(BaseModel):
-    hidden_dims: list[int]
+    hidden_dims: List[int]
     actor_lr : float
     critic_lr: float
     weight_decay: float
