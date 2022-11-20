@@ -9,7 +9,6 @@ license = 'ISC'
 authors = [
   { name = 'Minghong Xu', email = '86758413+MinghongAlexXu@users.noreply.github.com' },
 ]
-version = '0.0.0'
 classifiers = [
   'Private :: Do Not Upload',
   'Development Status :: 1 - Planning',
@@ -24,6 +23,7 @@ classifiers = [
   'Programming Language :: Python :: Implementation :: CPython',
   'Typing :: Typed',
 ]
+version = '0.0.0'
 requires-python = '>=3.8,<3.11'
 dependencies = [
   'torch',

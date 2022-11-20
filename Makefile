@@ -11,6 +11,9 @@ install:
 	# https://setuptools.pypa.io/en/latest/userguide/development_mode.html
 	python3 -m pip install $(torch_repo) --editable .
 
+test:
+	hatch run test:cov
+
 if-in-venv:
 ifndef VIRTUAL_ENV
 	$(error This recipe should be executed in a virtual environment)
@@ -31,13 +34,17 @@ sync: if-in-venv
 build: if-in-venv
 	python -m build
 
-clean: clean-pycache clean-build
+clean: clean-pycache clean-test clean-build
 
 clean-pycache:  # removes Python file artifacts https://en.wikipedia.org/wiki/Artifact_(software_development)
 	find . -type d -name '__pycache__' -exec rm -fr {} +
-	find . -type d -name '.mypy_cache' -exec rm -fr {} +
 	find . -type d -name 'outputs' -exec rm -fr {} +
 	find . -name '*~' -exec rm -f {} +
+	rm -fr .mypy_cache
+
+clean-test:  # removes test and coverage artifacts
+	rm -fr .pytest_cache
+	rm -f .coverage
 
 clean-build:  # removes build artifacts
 	rm -fr dist/

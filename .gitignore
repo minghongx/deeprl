@@ -5,10 +5,13 @@ outputs/
 __pycache__/
 *.py[cod]
 
+# Unit test / coverage reports
+.coverage
+
 # Distribution / packaging
 dist/
 
-# mypy
+# Mypy
 .mypy_cache/
 .dmypy.json
 dmypy.json
