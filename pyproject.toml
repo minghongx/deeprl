@@ -38,6 +38,7 @@ dev = [
   'pettingzoo[mpe]',
   'hydra-core',
   'pydantic',
+  'pre-commit',
   'debugpy',
   'mypy',
   'py-spy',

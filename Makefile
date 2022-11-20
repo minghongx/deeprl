@@ -23,7 +23,8 @@ rqmts: if-in-venv
 	pip-compile $(torch_repo) --output-file=requirements.txt pyproject.toml
 
 dev-rqmts: if-in-venv
-	pip-compile $(torch_repo) --extra=dev --output-file=dev-requirements.txt pyproject.toml
+	# https://github.com/jazzband/pip-tools/issues/1659
+	pip-compile $(torch_repo) --resolver=backtracking --extra=dev --output-file=dev-requirements.txt pyproject.toml
 
 all-rqmts: if-in-venv
 	pip-compile $(torch_repo) --all-extras --output-file=all-requirements.txt pyproject.toml
@@ -55,4 +56,5 @@ venv:
 	test -d $(venv_name) || virtualenv --python `which python3.8` $(venv_name)
 	source $(venv_name)/bin/activate
 	python -m pip install --upgrade pip
-	python -m pip install pip-tools
+	python -m pip install virtualenv pip-tools pre-commit
+	pre-commit install
