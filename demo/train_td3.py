@@ -18,31 +18,31 @@ from deeprl.actor_critic_arch.noise_injection.action_space import Gaussian
 
 @hydra.main(version_base=None, config_path='conf', config_name='train_td3')
 def train(cfg: DictConfig) -> None:
-    env_conf = EnvConfig(**cfg['env'])
-    td3_conf = TD3Config(**cfg['td3'])
+    env_cfg = EnvConfig(**cfg['env'])
+    td3_cfg = TD3Config(**cfg['td3'])
 
-    env = gym.make(env_conf.gym_name)
-    device = torch.device(env_conf.device)
+    env = gym.make(env_cfg.gym_name)
+    device = torch.device(env_cfg.device)
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
 
     agent = TD3(
-        Actor (state_dim, action_dim, td3_conf.hidden_dims, 'relu', 'tanh').to(device),
-        Critic(state_dim, action_dim, td3_conf.hidden_dims, 'relu').to(device),
-        partial(optim.Adam, lr=td3_conf.actor_lr , weight_decay=td3_conf.weight_decay),
-        partial(optim.Adam, lr=td3_conf.critic_lr, weight_decay=td3_conf.weight_decay),
-        UER(td3_conf.memory_capacity),
-        td3_conf.batch_size,
-        td3_conf.discount_factor,
-        td3_conf.polyak,
-        Gaussian(td3_conf.action_noise_stddev, td3_conf.action_noise_decay_const),
-        td3_conf.clip_bound,
-        td3_conf.stddev
+        Actor (state_dim, action_dim, td3_cfg.hidden_dims, 'relu', 'tanh').to(device),
+        Critic(state_dim, action_dim, td3_cfg.hidden_dims, 'relu').to(device),
+        partial(optim.Adam, lr=td3_cfg.actor_lr , weight_decay=td3_cfg.weight_decay),
+        partial(optim.Adam, lr=td3_cfg.critic_lr, weight_decay=td3_cfg.weight_decay),
+        UER(td3_cfg.memory_capacity),
+        td3_cfg.batch_size,
+        td3_cfg.discount_factor,
+        td3_cfg.polyak,
+        Gaussian(td3_cfg.action_noise_stddev, td3_cfg.action_noise_decay_const),
+        td3_cfg.clip_bound,
+        td3_cfg.stddev,
     )
 
     checkpoint_dir = Path(__file__).resolve().parent/'.checkpoints'/'TD3'/f'{env.spec.name}-v{env.spec.version}'/f'{datetime.now().strftime("%Y%m%d%H%M")}'
     with SummaryWriter(log_dir=Path(__file__).resolve().parent/'.logs'/'TD3'/f'{env.spec.name}-v{env.spec.version}'/f'{datetime.now().strftime("%Y%m%d%H%M")}') as writer:
-        for episode in range(env_conf.num_episodes):
+        for episode in range(env_cfg.num_episodes):
             state, _ = env.reset()
             state = torch.tensor(state, device=device, dtype=torch.float32)
             cumulative_reward = torch.zeros(1, device=device)
