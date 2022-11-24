@@ -18,3 +18,4 @@
 - [ ] Better *pre-commit* for Python project
     - https://github.com/pre-commit/pre-commit-hooks/blob/main/.pre-commit-config.yaml
     - https://github.com/pydantic/pydantic/blob/main/.pre-commit-config.yaml
+- [ ] Test the sum tree
