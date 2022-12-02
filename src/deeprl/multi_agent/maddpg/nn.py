@@ -28,7 +28,7 @@ class Actor(nn.Module):
 
         dimensions = [state_dim] + list(hidden_dims) + [action_dim]
 
-        self._layers = nn.ModuleList( 
+        self._layers = nn.ModuleList(
             [ nn.Linear(input_dim, output_dim) for input_dim, output_dim in zip(dimensions, dimensions[1:]) ])
 
         self._layers.apply(_init_weights)

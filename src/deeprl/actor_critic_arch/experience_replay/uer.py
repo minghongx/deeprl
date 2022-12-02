@@ -9,8 +9,8 @@ class UER(ExperienceReplay):
     """
     Uniformly sampled
 
-    In SRS, each subset of k individuals has the same 
-    probability of being chosen for the sample as any 
+    In SRS, each subset of k individuals has the same
+    probability of being chosen for the sample as any
     other subset of k individuals.
     https://en.wikipedia.org/wiki/Simple_random_sample
     """
