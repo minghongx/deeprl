@@ -11,7 +11,7 @@ install:
 	# https://setuptools.pypa.io/en/latest/userguide/development_mode.html
 	python3 -m pip install $(torch_repo) --editable .
 
-test:
+test:  # runs tests on every Python version with hatch
 	hatch run test:cov
 
 if-in-venv:
