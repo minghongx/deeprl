@@ -42,6 +42,8 @@ dev = [
   'debugpy',
   'mypy',
   'ruff',
+  'black',
+  'isort',
   'py-spy',
   'scalene',
   'torch-tb-profiler',

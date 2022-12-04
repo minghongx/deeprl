@@ -5,6 +5,9 @@
 - [ ] [autopep8](https://github.com/hhatto/autopep8)
 - [x] [flake8](https://github.com/PyCQA/flake8)
 - [x] [ruff](https://github.com/charliermarsh/ruff)
+- [x] Use ruff alongside black
+- [ ] Config [black](https://github.com/psf/black)
+- [ ] Config [isort](https://github.com/PyCQA/isort)
 - [ ] [pylint](https://github.com/PyCQA/pylint)
 - [ ] Open help/browser by make like [this](https://github.com/jeshraghian/snntorch/blob/cd9f9c0cf36a31e73a55de03d2e1408a379be6c5/Makefile#L4)
 - [ ] [Background](https://www.baeldung.com/linux/kill-background-process) demo, e.g.,
@@ -27,3 +30,4 @@
 - [ ] Better sum tree
     - https://github.com/marcelpanzer/turtlebot3_machine_learning/blob/master/turtlebot3_dqn/src/turtlebot3_dqn/sumtree.py
 - [ ] Test the sum tree
+- [ ] Replace pytest-cov with coverage

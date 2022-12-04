@@ -16,6 +16,8 @@ antlr4-python3-runtime==4.9.3
     #   omegaconf
 attrs==22.1.0
     # via deeprl (pyproject.toml)
+black==22.10.0
+    # via deeprl (pyproject.toml)
 cachetools==5.2.0
     # via google-auth
 certifi==2022.9.24
@@ -24,6 +26,8 @@ cfgv==3.3.1
     # via pre-commit
 charset-normalizer==2.1.1
     # via requests
+click==8.1.3
+    # via black
 cloudpickle==2.2.0
     # via
     #   gymnasium
@@ -68,6 +72,8 @@ importlib-metadata==5.1.0
     #   markdown
 importlib-resources==5.10.0
     # via hydra-core
+isort==5.10.1
+    # via deeprl (pyproject.toml)
 jinja2==3.1.2
     # via scalene
 markdown==3.4.1
@@ -81,7 +87,9 @@ mujoco==2.2.0
 mypy==0.991
     # via deeprl (pyproject.toml)
 mypy-extensions==0.4.3
-    # via mypy
+    # via
+    #   black
+    #   mypy
 nodeenv==1.7.0
     # via pre-commit
 numpy==1.23.5
@@ -100,12 +108,16 @@ packaging==21.3
     # via hydra-core
 pandas==1.5.2
     # via torch-tb-profiler
+pathspec==0.10.2
+    # via black
 pettingzoo[mpe]==1.22.2
     # via deeprl (pyproject.toml)
 pillow==9.3.0
     # via imageio
 platformdirs==2.5.4
-    # via virtualenv
+    # via
+    #   black
+    #   virtualenv
 pre-commit==2.20.0
     # via deeprl (pyproject.toml)
 protobuf==3.20.3
@@ -148,7 +160,7 @@ rich==12.6.0
     # via scalene
 rsa==4.9
     # via google-auth
-ruff==0.0.152
+ruff==0.0.154
     # via deeprl (pyproject.toml)
 scalene==1.5.15
     # via deeprl (pyproject.toml)
@@ -165,7 +177,9 @@ tensorboard-plugin-wit==1.8.1
 toml==0.10.2
     # via pre-commit
 tomli==2.0.1
-    # via mypy
+    # via
+    #   black
+    #   mypy
 toolz==0.12.0
     # via
     #   cytoolz
@@ -176,6 +190,7 @@ torch-tb-profiler==0.4.0
     # via deeprl (pyproject.toml)
 typing-extensions==4.4.0
     # via
+    #   black
     #   mypy
     #   pydantic
     #   rich
