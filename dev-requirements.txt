@@ -15,9 +15,7 @@ antlr4-python3-runtime==4.9.3
     #   hydra-core
     #   omegaconf
 attrs==22.1.0
-    # via
-    #   deeprl (pyproject.toml)
-    #   flake8-bugbear
+    # via deeprl (pyproject.toml)
 cachetools==5.2.0
     # via google-auth
 certifi==2022.9.24
@@ -40,15 +38,6 @@ distlib==0.3.6
     # via virtualenv
 filelock==3.8.0
     # via virtualenv
-flake8==6.0.0
-    # via
-    #   deeprl (pyproject.toml)
-    #   flake8-assertive
-    #   flake8-bugbear
-flake8-assertive==2.1.0
-    # via deeprl (pyproject.toml)
-flake8-bugbear==22.10.27
-    # via deeprl (pyproject.toml)
 glfw==2.5.5
     # via mujoco
 google-auth==2.15.0
@@ -87,8 +76,6 @@ markupsafe==2.1.1
     # via
     #   jinja2
     #   werkzeug
-mccabe==0.7.0
-    # via flake8
 mujoco==2.2.0
     # via gymnasium
 mypy==0.991
@@ -131,12 +118,8 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
-pycodestyle==2.10.0
-    # via flake8
 pydantic==1.10.2
     # via deeprl (pyproject.toml)
-pyflakes==3.0.1
-    # via flake8
 pygame==2.1.0
     # via pettingzoo
 pygments==2.13.0
@@ -165,6 +148,8 @@ rich==12.6.0
     # via scalene
 rsa==4.9
     # via google-auth
+ruff==0.0.152
+    # via deeprl (pyproject.toml)
 scalene==1.5.15
     # via deeprl (pyproject.toml)
 six==1.16.0

@@ -31,7 +31,7 @@ class PER(ExperienceReplay):
         if batch_size > len(self._buffer):
             raise ValueError
         bounds = np.linspace(0, self._buffer._weights[0], batch_size + 1)
-        indices, experiences = zip(*[self._buffer.retrieve( random.uniform(l, h) ) for l, h in zip(bounds, bounds[1:])])
+        indices, experiences = zip(*[self._buffer.retrieve( random.uniform(left, right) ) for left, right in zip(bounds, bounds[1:])])
         batch = Batch(experiences)
         setattr(batch, 'indices', indices)
         return batch

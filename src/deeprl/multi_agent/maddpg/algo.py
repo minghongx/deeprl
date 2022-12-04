@@ -10,8 +10,8 @@ from torch.optim import Optimizer
 # from pettingzoo.utils.env import AgentID
 AgentID = str
 
-from .nn import Actor, Critic
-from .er import ExperienceReplay
+from .nn import Actor, Critic  # noqa: E402
+from .er import ExperienceReplay  # noqa: E402
 
 
 class Agent:

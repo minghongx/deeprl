@@ -35,8 +35,8 @@ ifndef VIRTUAL_ENV
 	$(error This recipe should be executed in a virtual environment)
 endif
 
-lint-flake8: if-in-venv
-	@flake8 $(sources)
+lint: if-in-venv
+	@ruff $(sources)
 
 rqmts: if-in-venv
 	pip-compile $(torch_repo) --output-file=requirements.txt pyproject.toml

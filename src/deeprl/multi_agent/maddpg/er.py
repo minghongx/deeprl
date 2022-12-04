@@ -11,7 +11,7 @@ from cytoolz import merge_with
 # from pettingzoo.utils.env import AgentID
 AgentID = str
 
-from ...data_structures.rotating_list import RotatingList
+from ...data_structures.rotating_list import RotatingList  # noqa: E402
 
 
 @dataclass

@@ -11,10 +11,5 @@ __pycache__/
 # Distribution / packaging
 dist/
 
-# Mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
 # VSCode
 .vscode/settings.json
