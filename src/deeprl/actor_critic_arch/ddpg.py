@@ -29,9 +29,6 @@ class DDPG:
             policy_noise: Union[ActionNoise, AdaptiveParameterNoise, None]
     ) -> None:
 
-        # TODO: @property ? e.g. validate polyak ∈ [0, 1] in setter
-        # Warning or raising exception?
-
         self._policy = policy
         self._critic = critic
         self._target_policy = deepcopy(self._policy)
