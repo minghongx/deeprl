@@ -1,9 +1,6 @@
-from torch import Tensor
-
-from .base import ExperienceReplay, Experience, Batch
+from .base import ExperienceReplay
 
 
 class HER(ExperienceReplay):
-
     def __init__(self) -> None:
         ...

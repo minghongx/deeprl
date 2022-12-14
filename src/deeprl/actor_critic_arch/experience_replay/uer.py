@@ -1,8 +1,8 @@
 import numpy as np
 from torch import Tensor
 
-from .base import ExperienceReplay, Experience, Batch
 from ...data_structures import RotatingList
+from .base import Batch, Experience, ExperienceReplay
 
 
 class UER(ExperienceReplay):
@@ -17,16 +17,19 @@ class UER(ExperienceReplay):
 
     def __init__(self, capacity: int) -> None:
         self._buffer = RotatingList[Experience](capacity)
-        self._rng = np.random.default_rng()  # https://stackoverflow.com/questions/61676156/how-to-use-the-new-numpy-random-number-generator
+        self._rng = np.random.default_rng()
 
-    def push(self,
-            observation     : Tensor,
-            action          : Tensor,
-            reward          : Tensor,
-            next_observation: Tensor,
-            terminated      : Tensor
+    def push(
+        self,
+        observation: Tensor,
+        action: Tensor,
+        reward: Tensor,
+        next_observation: Tensor,
+        terminated: Tensor,
     ) -> None:
-        self._buffer.store( Experience(observation, action, reward, next_observation, terminated) )
+        self._buffer.store(
+            Experience(observation, action, reward, next_observation, terminated)
+        )
 
     def sample(self, batch_size: int) -> Batch:
         """

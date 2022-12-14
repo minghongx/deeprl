@@ -3,7 +3,7 @@ from itertools import count
 
 import numpy as np
 import torch
-from torch import Tensor, Size
+from torch import Size, Tensor
 
 
 class ActionNoise(ABC):
@@ -23,7 +23,7 @@ class Gaussian(ActionNoise):
         self._time = count(start=0, step=1)
 
     def __call__(self, size: Size, device: torch.device) -> Tensor:
-        self.stddev = self.stddev * np.exp( -self.decay_constant * next(self._time) )
+        self.stddev = self.stddev * np.exp(-self.decay_constant * next(self._time))
         return self.stddev * torch.randn(size, device=device)
 
 

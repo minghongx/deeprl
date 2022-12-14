@@ -52,14 +52,18 @@ dev = [
 [tool.ruff]
 # Enable Pyflakes and pycodestyle rules.
 select = ['E', 'F']
-
 # Never enforce `E501` (line length violations).
 ignore = ['E501']
-
 # Always autofix, but never try to fix `F401` (unused imports).
 fix = false
 unfixable = ['F401']
-
 # Ignore `E402` (import violations) in all `__init__.py` files
 [tool.ruff.per-file-ignores]
 '__init__.py' = ['E402']
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.isort]
+profile = 'black'

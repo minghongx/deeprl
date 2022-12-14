@@ -1,8 +1,7 @@
-from .base import Experience, Batch, ExperienceReplay
-from .uer import UER
-from .per import PER
+from .base import Batch, Experience, ExperienceReplay
 from .her import HER
-
+from .per import PER
+from .uer import UER
 
 __all__ = (
     Experience.__name__,

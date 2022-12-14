@@ -1,6 +1,11 @@
 from copy import deepcopy
+
 # from collections.abc import Callable, Iterator
-from typing import Callable, Iterator, Union  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
+from typing import (  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
+    Callable,
+    Iterator,
+    Union,
+)
 
 import torch
 import torch.nn.functional as F
@@ -8,25 +13,24 @@ from torch import Tensor
 from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
+from .experience_replay import PER, ExperienceReplay
 from .neural_network.mlp import Actor, Critic
-from .experience_replay import ExperienceReplay
-from .experience_replay import PER
 from .noise_injection.action_space import ActionNoise
 from .noise_injection.parameter_space import AdaptiveParameterNoise
 
 
 class DDPG:
-
-    def __init__(self,
-            policy: Actor,
-            critic: Critic,
-            policy_optimiser: Callable[[Iterator[Parameter]], Optimizer],
-            critic_optimiser: Callable[[Iterator[Parameter]], Optimizer],
-            experience_replay: ExperienceReplay,
-            batch_size: int,
-            discount_factor: float,
-            polyak: float,
-            policy_noise: Union[ActionNoise, AdaptiveParameterNoise, None]
+    def __init__(
+        self,
+        policy: Actor,
+        critic: Critic,
+        policy_optimiser: Callable[[Iterator[Parameter]], Optimizer],
+        critic_optimiser: Callable[[Iterator[Parameter]], Optimizer],
+        experience_replay: ExperienceReplay,
+        batch_size: int,
+        discount_factor: float,
+        polyak: float,
+        policy_noise: Union[ActionNoise, AdaptiveParameterNoise, None],
     ) -> None:
 
         self._policy = policy
@@ -47,12 +51,13 @@ class DDPG:
         self._polyak = polyak
         self._policy_noise = policy_noise
 
-    def step(self,
-            state     : Tensor,
-            action    : Tensor,
-            reward    : Tensor,
-            next_state: Tensor,
-            terminated: Tensor
+    def step(
+        self,
+        state: Tensor,
+        action: Tensor,
+        reward: Tensor,
+        next_state: Tensor,
+        terminated: Tensor,
     ) -> None:
         self._experience_replay.push(state, action, reward, next_state, terminated)
         self._update()
@@ -64,7 +69,14 @@ class DDPG:
         except ValueError:
             return
 
-        TD_targets = batch.rewards + ~batch.terminateds * self._discount_factor * self._target_critic(batch.next_states, self._target_policy(batch.next_states))
+        TD_targets = (
+            batch.rewards
+            + ~batch.terminateds
+            * self._discount_factor
+            * self._target_critic(
+                batch.next_states, self._target_policy(batch.next_states)
+            )
+        )
         action_values = self._critic(batch.states, batch.actions)
 
         critic_loss = F.mse_loss(TD_targets, action_values)
@@ -73,24 +85,30 @@ class DDPG:
         self._critic_optimiser.step()
 
         # Learn a deterministic policy which gives the action that maximizes Q by gradient ascent
-        policy_loss: Tensor = -self._critic(batch.states, self._policy(batch.states)).mean()
+        policy_loss: Tensor = -self._critic(
+            batch.states, self._policy(batch.states)
+        ).mean()
         self._policy_optimiser.zero_grad()
         policy_loss.backward()
         self._policy_optimiser.step()
 
         # Update frozen target networks by Polyak averaging
         with torch.no_grad():  # stops target param from requesting grad after calc because original param require grad are involved in the calc
-            for ϕ, ϕ_targ in zip(self._critic.parameters(), self._target_critic.parameters()):
+            for ϕ, ϕ_targ in zip(
+                self._critic.parameters(), self._target_critic.parameters()
+            ):
                 ϕ_targ.mul_(self._polyak)
-                ϕ_targ.add_( (1.0 - self._polyak) * ϕ )
-            for θ, θ_targ in zip(self._policy.parameters(), self._target_policy.parameters()):
+                ϕ_targ.add_((1.0 - self._polyak) * ϕ)
+            for θ, θ_targ in zip(
+                self._policy.parameters(), self._target_policy.parameters()
+            ):
                 θ_targ.mul_(self._polyak)
-                θ_targ.add_( (1.0 - self._polyak) * θ )
+                θ_targ.add_((1.0 - self._polyak) * θ)
 
             if isinstance(self._experience_replay, PER):
-                TD_errors  = TD_targets - action_values
+                TD_errors = TD_targets - action_values
                 priorities = torch.abs(TD_errors).cpu().numpy()
-                setattr(batch, 'priorities', priorities)
+                setattr(batch, "priorities", priorities)
                 self._experience_replay.update_priorities(batch)
 
     @torch.no_grad()
@@ -103,9 +121,9 @@ class DDPG:
         #     case _:
         if isinstance(self._policy_noise, ActionNoise):
             action += self._policy_noise(action.size(), action.device)
-            action.clamp_(-1, 1)  # Output layer of policy network is tanh activated; hence the valid action range is [-1, 1]
+            action.clamp_(-1, 1)  # Output layer of policy network is tanh activated
         if isinstance(self._policy_noise, AdaptiveParameterNoise):
-            perturbed_policy  = self._policy_noise.perturb(self._policy)
+            perturbed_policy = self._policy_noise.perturb(self._policy)
             perturbed_action = perturbed_policy(state)
             self._policy_noise.adapt(action, perturbed_action)
             action = perturbed_action

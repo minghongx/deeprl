@@ -36,9 +36,9 @@ ifndef VIRTUAL_ENV
 endif
 
 lint: if-in-venv
-	ruff $(sources)
-	isort $(sources) --check-only --df
-	black $(sources) --check --diff
+	@ruff $(sources)
+	@isort $(sources) --check-only --df
+	@black $(sources) --check --diff
 
 format: if-in-venv
 	isort $(sources)
