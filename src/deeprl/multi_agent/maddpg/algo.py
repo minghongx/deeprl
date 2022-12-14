@@ -98,7 +98,7 @@ class MADDPG:
         critic_optimiser.step()
 
         batch.actions[agent_id] = policy(observation)
-        policy_loss = -critic(observation_of_all_agents, list(batch.actions.values())).mean()
+        policy_loss: Tensor = -critic(observation_of_all_agents, list(batch.actions.values())).mean()
         policy_optimiser.zero_grad()
         policy_loss.backward()
         policy_optimiser.step()

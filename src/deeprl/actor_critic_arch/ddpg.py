@@ -73,7 +73,7 @@ class DDPG:
         self._critic_optimiser.step()
 
         # Learn a deterministic policy which gives the action that maximizes Q by gradient ascent
-        policy_loss = -self._critic(batch.states, self._policy(batch.states)).mean()
+        policy_loss: Tensor = -self._critic(batch.states, self._policy(batch.states)).mean()
         self._policy_optimiser.zero_grad()
         policy_loss.backward()
         self._policy_optimiser.step()
@@ -95,7 +95,7 @@ class DDPG:
 
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
-        action = self._policy(state)
+        action: Tensor = self._policy(state)
         # TODO: Avaliable since version 3.10. See PEP 634
         # match self._policy_noise:
         #     case ActionNoise():

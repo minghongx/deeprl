@@ -80,7 +80,7 @@ class TD3:
             return
 
         # Compute target actions
-        target_actions = self._target_policy(batch.next_states)
+        target_actions: Tensor = self._target_policy(batch.next_states)
         # Add clipped noise
         target_actions += target_actions.clone().normal_(0, self._stddev).clamp_(-self._clip_bound, self._clip_bound)
         # Target actions are clipped to lie in valid action range
@@ -97,7 +97,7 @@ class TD3:
         if next(self._count) % self._policy_delay == 0:
 
             # Learn a deterministic policy which gives the action that maximizes Q by gradient ascent
-            policy_loss = -self._critics[0](batch.states, self._policy(batch.states)).mean()
+            policy_loss: Tensor = -self._critics[0](batch.states, self._policy(batch.states)).mean()
             self._policy_optimiser.zero_grad()
             policy_loss.backward()
             self._policy_optimiser.step()
@@ -114,7 +114,7 @@ class TD3:
 
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
-        action = self._policy(state)
+        action: Tensor = self._policy(state)
         # TODO: Avaliable since version 3.10. See PEP 634
         # match self._policy_noise:
         #     case Gaussian():
