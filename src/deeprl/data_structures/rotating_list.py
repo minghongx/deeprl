@@ -1,7 +1,8 @@
 from typing import (
     List,  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
 )
-from typing import Generic, Sequence, TypeVar, cast
+from typing import Union  # TODO: Unnecessary since version 3.10. See PEP 604.
+from typing import Generic, Sequence, TypeVar, cast, overload
 
 _T = TypeVar("_T")
 
@@ -25,8 +26,16 @@ class RotatingList(Sequence[_T], Generic[_T]):
         self._size = min(self._size + 1, self._capacity)
         return idx
 
-    def __getitem__(self, key):
-        return self._list[key]
+    @overload
+    def __getitem__(self, idx: int) -> _T:
+        ...
 
-    def __len__(self):
+    @overload
+    def __getitem__(self, idx: slice) -> List[_T]:
+        ...
+
+    def __getitem__(self, idx: Union[int, slice]) -> Union[_T, List[_T]]:
+        return self._list[idx]
+
+    def __len__(self) -> int:
         return self._size

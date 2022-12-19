@@ -26,8 +26,8 @@ class AdaptiveParameterNoise:
     @torch.no_grad()
     def _add_gaussian_noise_to_weights(self, m: nn.Module) -> None:
         if hasattr(m, "weight"):
-            m.weight.add_(
-                torch.randn(m.weight.size(), device=m.weight.device) * self.stddev
+            m.weight.add_(  # FIXME: Type
+                torch.randn(m.weight.size(), device=m.weight.device) * self.stddev  # type: ignore
             )
 
     @torch.no_grad()

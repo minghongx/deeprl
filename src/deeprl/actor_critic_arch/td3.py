@@ -119,7 +119,7 @@ class TD3:
                 for action_values in ls_action_values
             ]
         )
-        [critic_optimiser.zero_grad() for critic_optimiser in self._critic_optimisers]
+        [critic_optimiser.zero_grad() for critic_optimiser in self._critic_optimisers]  # type: ignore
         critic_loss.backward()
         [critic_optimiser.step() for critic_optimiser in self._critic_optimisers]
 

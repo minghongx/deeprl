@@ -38,7 +38,7 @@ class PER(ExperienceReplay):
         setattr(batch, "indices", indices)
         return batch
 
-    def update_priorities(self, batch: Batch):
+    def update_priorities(self, batch: Batch) -> None:
         if not hasattr(batch, "indices") or not hasattr(batch, "priorities"):
             raise ValueError('Missing attribute "indices" or "priorities".')
         for idx, priority in zip( getattr(batch, 'indices'), getattr(batch, 'priorities') ):  # fmt: skip

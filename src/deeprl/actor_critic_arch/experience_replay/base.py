@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
+from typing import (
+    Iterator,  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
+)
 from typing import Sequence
 
 import torch
@@ -15,7 +18,7 @@ class Experience:
     next_state: Tensor
     terminated: Tensor
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         return iter(self.__dict__.values())
 
 

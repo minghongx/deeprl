@@ -35,14 +35,17 @@ ifndef VIRTUAL_ENV
 	$(error This recipe should be executed in a virtual environment)
 endif
 
+format: if-in-venv
+	isort $(sources)
+	black $(sources)
+
 lint: if-in-venv
 	@ruff $(sources)
 	@isort $(sources) --check-only --df
 	@black $(sources) --check --diff
 
-format: if-in-venv
-	isort $(sources)
-	black $(sources)
+mypy: if-in-venv
+	mypy src/deeprl
 
 rqmts: if-in-venv
 	pip-compile $(torch_repo) --output-file=requirements.txt pyproject.toml

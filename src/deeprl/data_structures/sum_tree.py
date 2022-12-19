@@ -36,7 +36,7 @@ class SumTree(Sized, Generic[_T]):
         leaf = min(leaf, len(self._leaves) + self._bias - 1)
         return leaf, self._leaves[leaf - self._bias]
 
-    def store(self, __object: _T, priority) -> int:
+    def store(self, __object: _T, priority: float) -> int:
         leaf = self._leaves.store(__object) + self._bias
         self.update_priority(leaf, priority)
         return leaf
