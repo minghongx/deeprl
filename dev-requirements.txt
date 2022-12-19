@@ -10,7 +10,7 @@ absl-py==1.3.0
     # via
     #   mujoco
     #   tensorboard
-antlr4-python3-runtime==4.9.3
+antlr4-python3-runtime==4.11.1
     # via
     #   hydra-core
     #   omegaconf
