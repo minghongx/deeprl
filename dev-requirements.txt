@@ -120,7 +120,7 @@ platformdirs==2.5.4
     #   virtualenv
 pre-commit==2.20.0
     # via deeprl (pyproject.toml)
-protobuf==3.20.3
+protobuf==4.21.12
     # via tensorboard
 py-spy==0.3.14
     # via deeprl (pyproject.toml)
