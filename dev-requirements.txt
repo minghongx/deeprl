@@ -160,7 +160,7 @@ rich==12.6.0
     # via scalene
 rsa==4.9
     # via google-auth
-ruff==0.0.154
+ruff==0.0.188
     # via deeprl (pyproject.toml)
 scalene==1.5.15
     # via deeprl (pyproject.toml)
