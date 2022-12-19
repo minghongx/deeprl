@@ -197,7 +197,7 @@ typing-extensions==4.4.0
     #   torch
 urllib3==1.26.13
     # via requests
-virtualenv==20.17.0
+virtualenv==20.17.1
     # via pre-commit
 werkzeug==2.2.2
     # via tensorboard
