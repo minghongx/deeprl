@@ -104,7 +104,7 @@ oauthlib==3.2.2
     # via requests-oauthlib
 omegaconf==2.2.3
     # via hydra-core
-packaging==21.3
+packaging==22.0
     # via hydra-core
 pandas==1.5.2
     # via torch-tb-profiler
