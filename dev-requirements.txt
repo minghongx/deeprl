@@ -40,7 +40,7 @@ debugpy==1.6.4
     # via deeprl (pyproject.toml)
 distlib==0.3.6
     # via virtualenv
-filelock==3.8.0
+filelock==3.8.2
     # via virtualenv
 glfw==2.5.5
     # via mujoco
