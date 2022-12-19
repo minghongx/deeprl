@@ -70,7 +70,7 @@ importlib-metadata==5.1.0
     # via
     #   gymnasium
     #   markdown
-importlib-resources==5.10.0
+importlib-resources==5.10.1
     # via hydra-core
 isort==5.10.1
     # via deeprl (pyproject.toml)
