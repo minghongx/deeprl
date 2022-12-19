@@ -72,7 +72,7 @@ importlib-metadata==5.1.0
     #   markdown
 importlib-resources==5.10.0
     # via hydra-core
-isort==5.10.1
+isort==5.11.3
     # via deeprl (pyproject.toml)
 jinja2==3.1.2
     # via scalene
