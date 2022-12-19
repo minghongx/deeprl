@@ -1,4 +1,4 @@
-from .base import ExperienceReplay
+from ._base import ExperienceReplay
 
 
 class HER(ExperienceReplay):

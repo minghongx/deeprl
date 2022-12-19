@@ -3,8 +3,8 @@ import random
 import numpy as np
 from torch import Tensor
 
-from ...data_structures import SumTree
-from .base import Batch, Experience, ExperienceReplay
+from ..._data_structures import SumTree
+from ._base import Batch, Experience, ExperienceReplay
 
 
 class PER(ExperienceReplay):

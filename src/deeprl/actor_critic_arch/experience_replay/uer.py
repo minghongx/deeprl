@@ -1,8 +1,8 @@
 import numpy as np
 from torch import Tensor
 
-from ...data_structures import RotatingList
-from .base import Batch, Experience, ExperienceReplay
+from ..._data_structures import RotatingList
+from ._base import Batch, Experience, ExperienceReplay
 
 
 class UER(ExperienceReplay):

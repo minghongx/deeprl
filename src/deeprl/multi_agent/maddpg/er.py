@@ -18,7 +18,7 @@ from torch import Tensor
 # from pettingzoo.utils.env import AgentID
 AgentID = str
 
-from ...data_structures.rotating_list import RotatingList  # noqa: E402
+from ..._data_structures.rotating_list import RotatingList  # noqa: E402
 
 
 @dataclass

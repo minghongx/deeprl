@@ -1,4 +1,4 @@
-from .base import Batch, Experience, ExperienceReplay
+from ._base import Batch, Experience, ExperienceReplay
 from .her import HER
 from .per import PER
 from .uer import UER
