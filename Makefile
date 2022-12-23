@@ -1,4 +1,4 @@
-# https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
+# https://www.gnu.org/software/make/manual/
 
 .DEFAULT_GOAL := venv
 
@@ -6,11 +6,16 @@ SHELL = bash
 
 venv_name = .venv
 sources = src/deeprl tests
-torch_repo = --extra-index-url=https://download.pytorch.org/whl/cu117
 
-install:
-	# https://setuptools.pypa.io/en/latest/userguide/development_mode.html
-	python3 -m pip install $(torch_repo) --editable .
+install: sync
+	python3 -m pip install --editable .
+
+rqmts:
+	# https://github.com/jazzband/pip-tools/issues/1659
+	pip-compile --resolver=backtracking --extra=dev --output-file=requirements.txt pyproject.toml
+
+sync:
+	pip-sync requirements.txt
 
 test:  # runs tests on every Python version with hatch
 	hatch run test:cov
@@ -46,19 +51,6 @@ lint: if-in-venv
 
 mypy: if-in-venv
 	mypy src/deeprl
-
-rqmts: if-in-venv
-	pip-compile $(torch_repo) --output-file=requirements.txt pyproject.toml
-
-dev-rqmts: if-in-venv
-	# https://github.com/jazzband/pip-tools/issues/1659
-	pip-compile $(torch_repo) --resolver=backtracking --extra=dev --output-file=dev-requirements.txt pyproject.toml
-
-all-rqmts: if-in-venv
-	pip-compile $(torch_repo) --all-extras --output-file=all-requirements.txt pyproject.toml
-
-sync: if-in-venv
-	$(error Not implemented)
 
 build: if-in-venv
 	python -m build

@@ -1,3 +1,7 @@
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata
+# https://packaging.python.org/en/latest/specifications/declaring-build-dependencies
+# https://pypi.org/classifiers/
+
 [build-system]
 requires = ['hatchling']
 build-backend = 'hatchling.build'
@@ -15,7 +19,7 @@ classifiers = [
   'Topic :: Scientific/Engineering :: Artificial Intelligence',
   'Intended Audience :: Science/Research',
   'Natural Language :: English',
-  'Operating System :: OS Independent',
+  'Operating System :: POSIX :: Linux',
   'Environment :: GPU :: NVIDIA CUDA :: 11.7',
   'Programming Language :: Python :: 3.8',
   'Programming Language :: Python :: 3.9',
