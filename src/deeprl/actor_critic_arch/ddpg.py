@@ -60,9 +60,9 @@ class DDPG:
         terminated: Tensor,
     ) -> None:
         self._experience_replay.push(state, action, reward, next_state, terminated)
-        self._update()
+        self._update_parameters()
 
-    def _update(self) -> None:
+    def _update_parameters(self) -> None:
 
         try:
             batch = self._experience_replay.sample(self._batch_size)
