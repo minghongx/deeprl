@@ -38,8 +38,8 @@ class TD3:
         discount_factor: float,
         polyak: float,
         policy_noise: Union[Gaussian, None],
-        clip_bound: float,
-        stddev: float,
+        smoothing_noise_stddev: float,
+        smoothing_noise_clip: float,
         num_critics: int = 2,
         policy_delay: int = 2,
     ) -> None:
@@ -63,8 +63,8 @@ class TD3:
         self._discount_factor = discount_factor
         self._polyak = polyak
         self._policy_noise = policy_noise
-        self._clip_bound = clip_bound
-        self._stddev = stddev
+        self._smoothing_noise_clip = smoothing_noise_clip
+        self._smoothing_noise_stddev = smoothing_noise_stddev
         self._policy_delay = policy_delay
 
         self._count = count(start=1, step=1)
@@ -87,48 +87,49 @@ class TD3:
         except ValueError:
             return
 
-        # Compute target actions
-        target_actions: Tensor = self._target_policy(batch.next_states)
-        # Add clipped noise
-        target_actions += (
-            target_actions.clone()
-            .normal_(0, self._stddev)
-            .clamp_(-self._clip_bound, self._clip_bound)
-        )
-        # Target actions are clipped to lie in valid action range
-        target_actions.clamp_(-1, 1)
+        # Abridging for readability
+        state = batch.states
+        action = batch.actions
+        reward = batch.rewards
+        next_state = batch.next_states
+        terminated = batch.terminateds
 
-        TD_targets = (
-            batch.rewards
-            + ~batch.terminateds
-            * self._discount_factor
+        # Compute target action
+        target_action: Tensor = self._target_policy(next_state)
+        # Target policy smoothing: add clipped noise to the target action
+        target_action += (
+            target_action.clone()
+            .normal_(0, self._smoothing_noise_stddev)
+            .clamp_(-self._smoothing_noise_clip, self._smoothing_noise_clip)
+        )
+        # Target action is clipped to lie in valid action range
+        target_action.clamp_(-1, 1)
+
+        TD_target = (
+            reward
+            + ~terminated * self._discount_factor
+            # Clipped double-Q learning
             * torch.min(
                 *[
-                    target_critic(batch.next_states, target_actions)
+                    target_critic(next_state, target_action)
                     for target_critic in self._target_critics
                 ]
             )
         )
-        ls_action_values = [
-            critic(batch.states, batch.actions) for critic in self._critics
-        ]
+        action_values = [critic(state, action) for critic in self._critics]
 
         critic_loss = torch.add(
-            *[
-                F.mse_loss(TD_targets, action_values)
-                for action_values in ls_action_values
-            ]
+            *[F.mse_loss(TD_target, action_value) for action_value in action_values]
         )
         [critic_optimiser.zero_grad() for critic_optimiser in self._critic_optimisers]  # type: ignore
         critic_loss.backward()
         [critic_optimiser.step() for critic_optimiser in self._critic_optimisers]
 
+        # "Delayed" policy updates
         if next(self._count) % self._policy_delay == 0:
 
             # Learn a deterministic policy which gives the action that maximizes Q by gradient ascent
-            policy_loss: Tensor = -self._critics[0](
-                batch.states, self._policy(batch.states)
-            ).mean()
+            policy_loss: Tensor = -self._critics[0](state, self._policy(state)).mean()
             self._policy_optimiser.zero_grad()
             policy_loss.backward()
             self._policy_optimiser.step()
@@ -136,16 +137,16 @@ class TD3:
             # Update frozen target networks by Polyak averaging
             with torch.no_grad():  # stops target param from requesting grad after calc because original param require grad are involved in the calc
                 for critic, target_critic in zip(self._critics, self._target_critics):
-                    for ϕ, ϕ_targ in zip(
+                    for 𝜙, 𝜙_targ in zip(
                         critic.parameters(), target_critic.parameters()
                     ):
-                        ϕ_targ.mul_(self._polyak)
-                        ϕ_targ.add_((1.0 - self._polyak) * ϕ)
-                for θ, θ_targ in zip(
+                        𝜙_targ.mul_(self._polyak)
+                        𝜙_targ.add_((1.0 - self._polyak) * 𝜙)
+                for 𝜃, 𝜃_targ in zip(
                     self._policy.parameters(), self._target_policy.parameters()
                 ):
-                    θ_targ.mul_(self._polyak)
-                    θ_targ.add_((1.0 - self._polyak) * θ)
+                    𝜃_targ.mul_(self._polyak)
+                    𝜃_targ.add_((1.0 - self._polyak) * 𝜃)
 
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
