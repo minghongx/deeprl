@@ -13,19 +13,19 @@ class Actor(nn.Module):
         state_dim: int,
         action_dim: int,
         hidden_dims: Iterable[int],
-        hidden_layer_activation_func: str,  # TODO: Python 3.11 StrEnum
-        output_layer_activation_func: str,  # controls the amplitude of the output
+        activation_func: str,  # TODO: Python 3.11 StrEnum
+        output_func: str,  # controls the amplitude of the output
     ) -> None:
         super(Actor, self).__init__()
 
         # fmt: off
-        self._hidden_layer_activation_func = nn.ModuleDict({
+        self._activation_func = nn.ModuleDict({
             'relu': nn.ReLU(),
-        })[hidden_layer_activation_func]
-        self._output_layer_activation_func = nn.ModuleDict({
+        })[activation_func]
+        self._output_func = nn.ModuleDict({
             'tanh': nn.Tanh(),
             'softmax': nn.Softmax(dim=-1),
-        })[output_layer_activation_func]
+        })[output_func]
         # fmt: on
 
         dimensions = [state_dim] + list(hidden_dims) + [action_dim]
@@ -39,19 +39,19 @@ class Actor(nn.Module):
         # https://github.com/pytorch/pytorch/issues/47336
         # activation = state
         # for hidden_layer in self._layers[:-1]:
-        #     activation = self._hidden_layer_activation_func( hidden_layer(activation) )
-        # action = self._output_layer_activation_func( self._layers[-1](activation) )
+        #     activation = self._activation_func( hidden_layer(activation) )
+        # action = self._output_func( self._layers[-1](activation) )
         # One-liner:
-        # action = self._output_layer_activation_func(self.layers[-1](
-        #     reduce(lambda activation, hidden_layer: self._hidden_layer_activation_func(hidden_layer(activation)), self.layers[:-1], state)))
+        # action = self._output_func(self.layers[-1](
+        #     reduce(lambda activation, hidden_layer: self._activation_func(hidden_layer(activation)), self.layers[:-1], state)))
         # However, torch.jit.script raises torch.jit.frontend.UnsupportedNodeError: Lambda aren't supported
         activation = state
         last = len(self._layers)
         for current, layer in enumerate(self._layers, start=1):
             if current != last:
-                activation = self._hidden_layer_activation_func(layer(activation))
+                activation = self._activation_func(layer(activation))
             else:
-                activation = self._output_layer_activation_func(layer(activation))
+                activation = self._output_func(layer(activation))
         action = activation
 
         return action
@@ -63,14 +63,14 @@ class Critic(nn.Module):
         state_dim: int,
         action_dim: int,
         hidden_dims: Iterable[int],
-        hidden_layer_activation_func: str,
+        activation_func: str,
     ) -> None:
         super(Critic, self).__init__()
 
         # fmt: off
-        self._hidden_layer_activation_func = nn.ModuleDict({
+        self.activation_func = nn.ModuleDict({
             'relu': nn.ReLU(),
-        })[hidden_layer_activation_func]
+        })[activation_func]
         # fmt: on
 
         dimensions = [state_dim + action_dim] + list(hidden_dims) + [1]
@@ -84,7 +84,7 @@ class Critic(nn.Module):
 
         activation = torch.cat([state, action], dim=1)
         for hidden_layer in self._layers[:-1]:
-            activation = self._hidden_layer_activation_func(hidden_layer(activation))
+            activation = self.activation_func(hidden_layer(activation))
         action_value = self._layers[-1](activation)
 
         return action_value
