@@ -10,10 +10,10 @@ from torch.utils.tensorboard import SummaryWriter
 from omegaconf import DictConfig
 
 from conf import EnvConfig, TD3Config
-from deeprl.actor_critic_arch import TD3
-from deeprl.actor_critic_arch.neural_network.mlp import Actor, Critic
-from deeprl.actor_critic_arch.experience_replay import UER
-from deeprl.actor_critic_arch.noise_injection.action_space import Gaussian
+from deeprl.actor_critic_methods import TD3
+from deeprl.actor_critic_methods.neural_network.mlp import Actor, Critic
+from deeprl.actor_critic_methods.experience_replay import UER
+from deeprl.actor_critic_methods.noise_injection.action_space import Gaussian
 
 
 @hydra.main(version_base=None, config_path='conf', config_name='train_td3')
