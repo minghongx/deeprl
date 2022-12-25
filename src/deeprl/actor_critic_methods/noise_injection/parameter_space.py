@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import torch
 import torch.nn as nn
-from toolz import compose
+from cytoolz import comp
 from torch import Tensor
 
 from ..neural_network.mlp import Actor
@@ -32,9 +32,7 @@ class AdaptiveParameterNoise:
 
     @torch.no_grad()
     def adapt(self, action: Tensor, perturbed_action: Tensor) -> None:
-        stddev = compose(torch.sqrt, torch.mean, torch.square)(
-            action - perturbed_action
-        )
+        stddev = comp(torch.sqrt, torch.mean, torch.square)(action - perturbed_action)
         # TODO: Avaliable since version 3.10. See PEP 634
         # match stddev:
         # case _ if stddev > self.desired_stddev:

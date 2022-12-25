@@ -31,7 +31,6 @@ version = '0.0.0'
 requires-python = '>=3.8,<3.11'
 dependencies = [
   'torch',
-  'toolz',
   'cytoolz',
   'attrs',
 ]
@@ -42,6 +41,7 @@ dev = [
   'pettingzoo[mpe]',
   'hydra-core',
   'pydantic',
+  'toolz',
   'pre-commit',
   'debugpy',
   'mypy',

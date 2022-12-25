@@ -7,7 +7,7 @@ import torch.optim as optim
 from pettingzoo.mpe import simple_speaker_listener_v3, simple_reference_v2
 # Truncation/Termination/Rendering API Update
 # https://github.com/Farama-Foundation/PettingZoo/issues/769
-from toolz import valmap, merge_with
+from cytoolz import valmap, merge_with
 from torch.utils.tensorboard import SummaryWriter
 
 from deeprl.multi_agent.maddpg.algo import MADDPG, Agent
