@@ -4,6 +4,7 @@ https://github.com/sfujim/TD3/blob/master/TD3.py
 """
 
 from copy import deepcopy
+from functools import partial
 from itertools import count
 
 # from collections.abc import Callable, Iterator
@@ -15,7 +16,9 @@ from typing import (  # TODO: Deprecated since version 3.9. See Generic Alias Ty
 
 import torch
 import torch.nn.functional as F
-from torch import Tensor
+from cytoolz import comp
+from cytoolz.curried import map, reduce
+from torch import Tensor, add, min
 from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
@@ -87,40 +90,35 @@ class TD3:
         except ValueError:
             return
 
-        # Abridging for readability
-        state = batch.states
-        action = batch.actions
-        reward = batch.rewards
-        next_state = batch.next_states
-        terminated = batch.terminateds
+        # Abbreviating to mathematical italic unicode char for readability
+        # fmt: off
+        𝑠 = batch.states
+        𝘢 = batch.actions
+        𝑟 = batch.rewards
+        𝑠ʼ = batch.next_states
+        𝑑 = batch.terminateds
+        𝛾 = self._discount_factor
+        𝜎 = self._smoothing_noise_stddev
+        𝑐 = self._smoothing_noise_clip
+        𝜇 = self._policy  # Deterministic policy is usually denoted by 𝜇, and stochastic " 𝜋
+        𝜇ʼ = self._target_policy
+        𝑄_ = self._critics
+        𝑄ʼ_ = self._target_critics
+        𝜌 = self._polyak
+        # fmt: on
 
         # Compute target action
-        target_action: Tensor = self._target_policy(next_state)
+        𝘢ʼ: Tensor = 𝜇ʼ(𝑠ʼ)
+
         # Target policy smoothing: add clipped noise to the target action
-        target_action += (
-            target_action.clone()
-            .normal_(0, self._smoothing_noise_stddev)
-            .clamp_(-self._smoothing_noise_clip, self._smoothing_noise_clip)
-        )
-        # Target action is clipped to lie in valid action range
-        target_action.clamp_(-1, 1)
+        ã = 𝘢ʼ + 𝘢ʼ.clone().normal_(0, 𝜎).clamp_(-𝑐, 𝑐)
+        ã.clamp_(-1, 1)  # clipped to lie in valid action range
 
-        TD_target = (
-            reward
-            + ~terminated * self._discount_factor
-            # Clipped double-Q learning
-            * torch.min(
-                *[
-                    target_critic(next_state, target_action)
-                    for target_critic in self._target_critics
-                ]
-            )
-        )
-        action_values = [critic(state, action) for critic in self._critics]
-
-        critic_loss = torch.add(
-            *[F.mse_loss(TD_target, action_value) for action_value in action_values]
-        )
+        # Clipped double-Q learning
+        𝑦 = 𝑟 + ~𝑑 * 𝛾 * min(*[𝑄ʼ(𝑠ʼ, ã) for 𝑄ʼ in 𝑄ʼ_])  # computes learning target
+        action_values = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
+        critic_loss_func = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
+        critic_loss = critic_loss_func(action_values)
         [critic_optimiser.zero_grad() for critic_optimiser in self._critic_optimisers]  # type: ignore
         critic_loss.backward()
         [critic_optimiser.step() for critic_optimiser in self._critic_optimisers]
@@ -129,24 +127,20 @@ class TD3:
         if next(self._count) % self._policy_delay == 0:
 
             # Learn a deterministic policy which gives the action that maximizes Q by gradient ascent
-            policy_loss: Tensor = -self._critics[0](state, self._policy(state)).mean()
+            policy_loss: Tensor = -𝑄_[0](𝑠, 𝜇(𝑠)).mean()
             self._policy_optimiser.zero_grad()
             policy_loss.backward()
             self._policy_optimiser.step()
 
             # Update frozen target networks by Polyak averaging
             with torch.no_grad():  # stops target param from requesting grad after calc because original param require grad are involved in the calc
-                for critic, target_critic in zip(self._critics, self._target_critics):
-                    for 𝜙, 𝜙_targ in zip(
-                        critic.parameters(), target_critic.parameters()
-                    ):
-                        𝜙_targ.mul_(self._polyak)
-                        𝜙_targ.add_((1.0 - self._polyak) * 𝜙)
-                for 𝜃, 𝜃_targ in zip(
-                    self._policy.parameters(), self._target_policy.parameters()
-                ):
-                    𝜃_targ.mul_(self._polyak)
-                    𝜃_targ.add_((1.0 - self._polyak) * 𝜃)
+                for 𝑄, 𝑄ʼ in zip(𝑄_, 𝑄ʼ_):
+                    for 𝜙, 𝜙ʼ in zip(𝑄.parameters(), 𝑄ʼ.parameters()):
+                        𝜙ʼ.mul_(𝜌)
+                        𝜙ʼ.add_((1.0 - 𝜌) * 𝜙)
+                for 𝜃, 𝜃ʼ in zip(𝜇.parameters(), 𝜇ʼ.parameters()):
+                    𝜃ʼ.mul_(𝜌)
+                    𝜃ʼ.add_((1.0 - 𝜌) * 𝜃)
 
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
