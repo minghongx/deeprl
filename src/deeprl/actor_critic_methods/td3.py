@@ -5,7 +5,7 @@ https://github.com/sfujim/TD3/blob/master/TD3.py
 
 from copy import deepcopy
 from functools import partial
-from itertools import count
+from itertools import cycle
 
 # from collections.abc import Callable, Iterator
 from typing import Union  # TODO: Unnecessary since version 3.10. See PEP 604.
@@ -68,9 +68,7 @@ class TD3:
         self._policy_noise = policy_noise
         self._smoothing_noise_clip = smoothing_noise_clip
         self._smoothing_noise_stddev = smoothing_noise_stddev
-        self._policy_delay = policy_delay
-
-        self._count = count(start=1, step=1)
+        self._policy_delay = cycle(range(policy_delay))
 
     def step(
         self,
@@ -124,7 +122,7 @@ class TD3:
         [critic_optimiser.step() for critic_optimiser in self._critic_optimisers]
 
         # "Delayed" policy updates
-        if next(self._count) % self._policy_delay == 0:
+        if next(self._policy_delay) == 0:
 
             # Learn a deterministic policy which gives the action that maximizes Q by gradient ascent
             policy_loss: Tensor = -𝑄_[0](𝑠, 𝜇(𝑠)).mean()
