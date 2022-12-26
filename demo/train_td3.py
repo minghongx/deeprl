@@ -23,12 +23,13 @@ def train(cfg: DictConfig) -> None:
 
     env = gym.make(env_cfg.gym_name)
     device = torch.device(env_cfg.device)
-    state_dim = env.observation_space.shape[0]
-    action_dim = env.action_space.shape[0]
 
     agent = TD3(
-        Actor (state_dim, action_dim, td3_cfg.hidden_dims, 'relu', 'tanh').to(device),
-        Critic(state_dim, action_dim, td3_cfg.hidden_dims, 'relu').to(device),
+        device,
+        env.observation_space.shape[0],
+        env.action_space.shape[0],
+        partial(Actor, hidden_dims=td3_cfg.hidden_dims, activation_func='relu', output_func='tanh'),
+        partial(Critic, hidden_dims=td3_cfg.hidden_dims, activation_func='relu'),
         partial(optim.Adam, lr=td3_cfg.actor_lr , weight_decay=td3_cfg.weight_decay),
         partial(optim.Adam, lr=td3_cfg.critic_lr, weight_decay=td3_cfg.weight_decay),
         UER(td3_cfg.memory_capacity),

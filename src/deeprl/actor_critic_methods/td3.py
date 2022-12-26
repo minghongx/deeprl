@@ -24,7 +24,7 @@ from torch.optim import Optimizer
 
 from .experience_replay import ExperienceReplay
 from .neural_network.mlp import Actor, Critic
-from .noise_injection.action_space import Gaussian
+from .noise_injection.action_space import ActionNoise, Gaussian
 
 
 class TD3:
@@ -32,23 +32,29 @@ class TD3:
 
     def __init__(
         self,
-        policy: Actor,
-        critic: Critic,
+        device: torch.device,
+        state_dim: int,
+        action_dim: int,
+        policy: Callable[[int, int], Actor],
+        critic: Callable[[int, int], Critic],
         policy_optimiser: Callable[[Iterator[Parameter]], Optimizer],
         critic_optimiser: Callable[[Iterator[Parameter]], Optimizer],
         experience_replay: ExperienceReplay,
         batch_size: int,
         discount_factor: float,
         polyak: float,
-        policy_noise: Union[Gaussian, None],
+        policy_noise: Union[ActionNoise, None],
         smoothing_noise_stddev: float,
         smoothing_noise_clip: float,
         num_critics: int = 2,
         policy_delay: int = 2,
     ) -> None:
 
-        self._policy = policy
-        self._critics = [deepcopy(critic) for _ in range(num_critics)]
+        self._policy = policy(state_dim, action_dim).to(device)
+        self._critics = [
+            deepcopy(critic(state_dim, action_dim).to(device))
+            for _ in range(num_critics)
+        ]
         self._target_policy = deepcopy(self._policy)
         self._target_critics = deepcopy(self._critics)
         # Freeze target networks with respect to optimisers (only update via Polyak averaging)
@@ -110,7 +116,7 @@ class TD3:
 
         # Target policy smoothing: add clipped noise to the target action
         ã = 𝘢ʼ + 𝘢ʼ.clone().normal_(0, 𝜎).clamp_(-𝑐, 𝑐)
-        ã.clamp_(-1, 1)  # clipped to lie in valid action range
+        ã.clamp_(-1, 1)  # clipped to lie in valid action range FIXME: hard-code range
 
         # Clipped double-Q learning
         𝑦 = 𝑟 + ~𝑑 * 𝛾 * min(*[𝑄ʼ(𝑠ʼ, ã) for 𝑄ʼ in 𝑄ʼ_])  # computes learning target
@@ -149,5 +155,5 @@ class TD3:
         #     case _:
         if isinstance(self._policy_noise, Gaussian):
             action += self._policy_noise(action.size(), action.device)
-            action.clamp_(-1, 1)  # Output layer of actor network is tanh activated
+            action.clamp_(-1, 1)  # FIXME: hard-code action range
         return action
