@@ -121,8 +121,8 @@ class TD3:
         # Clipped double-Q learning
         𝑦 = 𝑟 + ~𝑑 * 𝛾 * min(*[𝑄ʼ(𝑠ʼ, ã) for 𝑄ʼ in 𝑄ʼ_])  # computes learning target
         action_values = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
-        critic_loss_func = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
-        critic_loss = critic_loss_func(action_values)
+        critic_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
+        critic_loss = critic_loss_fn(action_values)
         [critic_optimiser.zero_grad() for critic_optimiser in self._critic_optimisers]  # type: ignore
         critic_loss.backward()
         [critic_optimiser.step() for critic_optimiser in self._critic_optimisers]

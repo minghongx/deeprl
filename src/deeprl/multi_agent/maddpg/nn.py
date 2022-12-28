@@ -17,19 +17,19 @@ class Actor(nn.Module):
         state_dim: int,
         action_dim: int,
         hidden_dims: Iterable[int],
-        hidden_layer_activation_func: str,  # TODO: Python 3.11 StrEnum
-        output_layer_activation_func: str,
+        activation_fn: str,  # TODO: Python 3.11 StrEnum
+        output_fn: str,
     ) -> None:
         super(Actor, self).__init__()
 
         # fmt: off
-        self._hidden_layer_activation_func = nn.ModuleDict({
+        self._activation_fn = nn.ModuleDict({
             'relu': nn.ReLU(),
-        })[hidden_layer_activation_func]
-        self._output_layer_activation_func = nn.ModuleDict({  # controls the amplitude of the output
+        })[activation_fn]
+        self._output_fn = nn.ModuleDict({  # controls the amplitude of the output
             'tanh': nn.Tanh(),
             'softmax': nn.Softmax(dim=-1),
-        })[output_layer_activation_func]
+        })[output_fn]
         # fmt: on
 
         dimensions = [state_dim] + list(hidden_dims) + [action_dim]
@@ -42,8 +42,8 @@ class Actor(nn.Module):
     def forward(self, state: Tensor) -> Tensor:
         activation = state
         for hidden_layer in self._layers[:-1]:
-            activation = self._hidden_layer_activation_func(hidden_layer(activation))
-        action = self._output_layer_activation_func(self._layers[-1](activation))
+            activation = self._activation_fn(hidden_layer(activation))
+        action = self._output_fn(self._layers[-1](activation))
         return action
 
 
@@ -56,14 +56,14 @@ class Critic(nn.Module):
         state_dim: int,
         actions_dim: int,
         hidden_dims: Iterable[int],
-        hidden_layer_activation_func: str,
+        activation_fn: str,
     ) -> None:
         super(Critic, self).__init__()
 
         # fmt: off
-        self._hidden_layer_activation_func = nn.ModuleDict({
+        self._activation_fn = nn.ModuleDict({
             'relu': nn.ReLU(),
-        })[hidden_layer_activation_func]
+        })[activation_fn]
         # fmt: on
 
         dimensions = [state_dim + actions_dim] + list(hidden_dims) + [1]
@@ -77,7 +77,7 @@ class Critic(nn.Module):
 
         activation = torch.cat(state + actions, dim=1)
         for hidden_layer in self._layers[:-1]:
-            activation = self._hidden_layer_activation_func(hidden_layer(activation))
+            activation = self._activation_fn(hidden_layer(activation))
         action_value = self._layers[-1](activation)
 
         return action_value
