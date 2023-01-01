@@ -1,4 +1,8 @@
-
+- [ ] JAX impl
+    - https://forums.developer.nvidia.com/t/isaacgym-jax-integration/228214/4
+    - https://github.com/ikostrikov/jaxrl2
+    - https://github.com/ikostrikov/jaxrl
+    - https://github.com/ikostrikov/walk_in_the_park/tree/main/rl
 - [ ] Write large scale experiment demo using [hydra-zen](https://github.com/mit-ll-responsible-ai/hydra-zen)
 - [ ] Better sum tree
     - https://github.com/marcelpanzer/turtlebot3_machine_learning/blob/master/turtlebot3_dqn/src/turtlebot3_dqn/sumtree.py
