@@ -122,7 +122,7 @@ class TD3:
         𝑦 = 𝑟 + ~𝑑 * 𝛾 * min(*[𝑄ʼ(𝑠ʼ, ã) for 𝑄ʼ in 𝑄ʼ_])  # computes learning target
         action_values = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
         critic_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
-        critic_loss = critic_loss_fn(action_values)
+        critic_loss: Tensor = critic_loss_fn(action_values)
         [critic_optimiser.zero_grad() for critic_optimiser in self._critic_optimisers]  # type: ignore
         critic_loss.backward()
         [critic_optimiser.step() for critic_optimiser in self._critic_optimisers]
@@ -130,7 +130,7 @@ class TD3:
         # "Delayed" policy updates
         if next(self._policy_delay) == 0:
 
-            # Learn a deterministic policy which gives the action that maximizes Q by gradient ascent
+            # Improve the deterministic policy just by maximizing the first Q function approximator by gradient ascent
             policy_loss: Tensor = -𝑄_[0](𝑠, 𝜇(𝑠)).mean()
             self._policy_optimiser.zero_grad()
             policy_loss.backward()
