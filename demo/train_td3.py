@@ -3,11 +3,9 @@ from datetime import datetime
 from functools import partial
 
 import gymnasium as gym
-import numpy as np
 import torch
 import torch.optim as optim
 import hydra
-from gymnasium.experimental.wrappers import NumpyToTorchV0
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import DictConfig
 
@@ -23,20 +21,8 @@ def train(cfg: DictConfig) -> None:
     env_cfg = EnvConfig(**cfg['env'])
     td3_cfg = TD3Config(**cfg['td3'])
 
-    device = torch.device(env_cfg.device)
-
     env = gym.make(env_cfg.gym_name)
-    if isinstance(env.observation_space.dtype, np.dtype):  # is a Numpy-based env
-        # Precision alignment with the env.
-        if env.observation_space.dtype == np.float64:
-            torch.set_default_dtype(torch.float64)  # Python floats are interpreted as float64
-        elif env.observation_space.dtype == np.float32:
-            torch.set_default_dtype(torch.float32)  # Python floats are interpreted as float32
-            pass  # The default floating point dtype is initially torch.float32
-        else:
-            raise TypeError(f"Unexpected {type(env.observation_space.dtype)} data type of an observation space.")
-
-        env = NumpyToTorchV0(env, device=device)  # converts Numpy-based env to PyTorch-based
+    device = torch.device(env_cfg.device)
 
     agent = TD3(
         device,
@@ -59,16 +45,20 @@ def train(cfg: DictConfig) -> None:
     with SummaryWriter(log_dir=Path(__file__).resolve().parent/'.logs'/'TD3'/f'{env.spec.name}-v{env.spec.version}'/f'{datetime.now().strftime("%Y%m%d%H%M")}') as writer:
         for episode in range(env_cfg.num_episodes):
             state, _ = env.reset()
-            episodic_return = torch.zeros(1, device=device)
+            state = torch.tensor(state, device=device, dtype=torch.float32)
+            cumulative_reward = torch.zeros(1, device=device)
 
             while True:
+                # Compute action
+                # TODO: Improve exploration
                 action = agent.compute_action(state)
 
-                next_state, reward, terminated, truncated, _ = env.step(action.cpu())  # Perform an action
-
-                episodic_return += reward
+                # Perform an action
+                next_state, reward, terminated, truncated, _ = env.step(action.cpu().numpy())
+                cumulative_reward += reward
                 # Convert to size(1,) tensor
-                reward = torch.tensor([reward], device=device)
+                next_state = torch.tensor(next_state  , device=device, dtype=torch.float32)
+                reward     = torch.tensor([reward]    , device=device, dtype=torch.float32)
                 terminated = torch.tensor([terminated], device=device, dtype=torch.bool)
 
                 # Store a transition in the experience replay and perform one step of the optimisation
@@ -76,14 +66,16 @@ def train(cfg: DictConfig) -> None:
 
                 if terminated or truncated:
                     break
-                state = next_state  # Move to the next state
+
+                # Move to the next state
+                state = next_state
 
             # Logging
             # TODO: Plot mean ± stddev curve for selecting the best model
-            writer.add_scalar(f'{env.spec.name}-v{env.spec.version}/episodic_return', episodic_return.item(), episode)
+            writer.add_scalar(f'{env.spec.name}-v{env.spec.version}/cumulative_reward', cumulative_reward.item(), episode)
 
-            # Periodical checkpointing
             if episode % 20 == 0:
+                # Checkpointing
                 checkpoint_dir.mkdir(parents=True, exist_ok=True)
                 policy_scripted = torch.jit.script(agent._policy)
                 policy_scripted.save(checkpoint_dir/f'ep{episode}.pt')
