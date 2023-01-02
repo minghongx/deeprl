@@ -46,36 +46,31 @@ def train(cfg: DictConfig) -> None:
         for episode in range(env_cfg.num_episodes):
             state, _ = env.reset()
             state = torch.tensor(state, device=device, dtype=torch.float32)
-            cumulative_reward = torch.zeros(1, device=device)
+            episodic_return = torch.zeros(1, device=device)
 
             while True:
-                # Compute action
-                # TODO: Improve exploration
                 action = agent.compute_action(state)
 
-                # Perform an action
                 next_state, reward, terminated, truncated, _ = env.step(action.cpu().numpy())
-                cumulative_reward += reward
-                # Convert to size(1,) tensor
                 next_state = torch.tensor(next_state  , device=device, dtype=torch.float32)
+                # Convert to size(1,) tensor
                 reward     = torch.tensor([reward]    , device=device, dtype=torch.float32)
                 terminated = torch.tensor([terminated], device=device, dtype=torch.bool)
 
+                episodic_return += reward
                 # Store a transition in the experience replay and perform one step of the optimisation
                 agent.step(state, action, reward, next_state, terminated)
 
                 if terminated or truncated:
                     break
-
                 # Move to the next state
                 state = next_state
 
             # Logging
-            # TODO: Plot mean ± stddev curve for selecting the best model
-            writer.add_scalar(f'{env.spec.name}-v{env.spec.version}/cumulative_reward', cumulative_reward.item(), episode)
+            writer.add_scalar(f'{env.spec.name}-v{env.spec.version}/episodic_return', episodic_return.item(), episode)
 
+            # Periodic checkpointing
             if episode % 20 == 0:
-                # Checkpointing
                 checkpoint_dir.mkdir(parents=True, exist_ok=True)
                 policy_scripted = torch.jit.script(agent._policy)
                 policy_scripted.save(checkpoint_dir/f'ep{episode}.pt')
