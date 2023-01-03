@@ -1,4 +1,6 @@
 - [ ] JAX impl
+    - https://www.deepmind.com/blog/using-jax-to-accelerate-our-research
+    - https://github.com/deepmind/jax
     - https://forums.developer.nvidia.com/t/isaacgym-jax-integration/228214/4
     - https://github.com/ikostrikov/jaxrl2
     - https://github.com/ikostrikov/jaxrl
