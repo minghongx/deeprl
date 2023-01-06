@@ -28,18 +28,17 @@ click==8.1.3
     # via black
 cloudpickle==2.2.0
     # via
-    #   gym
     #   gymnasium
     #   scalene
 commonmark==0.9.1
     # via rich
 cytoolz==0.12.1
     # via deeprl (pyproject.toml)
-debugpy==1.6.4
+debugpy==1.6.5
     # via deeprl (pyproject.toml)
 distlib==0.3.6
     # via virtualenv
-filelock==3.8.2
+filelock==3.9.0
     # via virtualenv
 glfw==2.5.5
     # via mujoco
@@ -51,30 +50,26 @@ google-auth-oauthlib==0.4.6
     # via tensorboard
 grpcio==1.51.1
     # via tensorboard
-gym==0.26.2
-    # via pettingzoo
-gym-notices==0.0.8
-    # via gym
 gymnasium[classic-control,mujoco]==0.27.0
     # via
     #   deeprl (pyproject.toml)
+    #   pettingzoo
     #   shimmy
 gymnasium-notices==0.0.1
     # via gymnasium
 hydra-core==1.3.1
     # via deeprl (pyproject.toml)
-identify==2.5.11
+identify==2.5.12
     # via pre-commit
 idna==3.4
     # via requests
 imageio==2.23.0
     # via gymnasium
-importlib-metadata==5.2.0
+importlib-metadata==6.0.0
     # via
-    #   gym
     #   gymnasium
     #   markdown
-importlib-resources==5.10.1
+importlib-resources==5.10.2
     # via hydra-core
 isort==5.11.4
     # via deeprl (pyproject.toml)
@@ -98,9 +93,8 @@ mypy-extensions==0.4.3
     #   mypy
 nodeenv==1.7.0
     # via pre-commit
-numpy==1.24.0
+numpy==1.24.1
     # via
-    #   gym
     #   gymnasium
     #   imageio
     #   jax-jumpy
@@ -129,15 +123,15 @@ pandas==1.5.2
     # via torch-tb-profiler
 pathspec==0.10.3
     # via black
-pettingzoo[mpe]==1.19.0
+pettingzoo[mpe]==1.22.3
     # via deeprl (pyproject.toml)
-pillow==9.3.0
+pillow==9.4.0
     # via imageio
-platformdirs==2.6.0
+platformdirs==2.6.2
     # via
     #   black
     #   virtualenv
-pre-commit==2.20.0
+pre-commit==2.21.0
     # via deeprl (pyproject.toml)
 protobuf==3.20.3
     # via tensorboard
@@ -149,13 +143,13 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
-pydantic==1.10.2
+pydantic==1.10.4
     # via deeprl (pyproject.toml)
 pygame==2.1.3.dev8
-    # via gymnasium
-pyglet==2.0.2.1
-    # via pettingzoo
-pygments==2.13.0
+    # via
+    #   gymnasium
+    #   pettingzoo
+pygments==2.14.0
     # via rich
 pynvml==11.4.1
     # via scalene
@@ -175,13 +169,13 @@ requests==2.28.1
     #   tensorboard
 requests-oauthlib==1.3.1
     # via google-auth-oauthlib
-rich==12.6.0
+rich==13.0.0
     # via scalene
 rsa==4.9
     # via google-auth
-ruff==0.0.192
+ruff==0.0.211
     # via deeprl (pyproject.toml)
-scalene==1.5.16
+scalene==1.5.18
     # via deeprl (pyproject.toml)
 shimmy==0.2.0
     # via gymnasium
@@ -195,8 +189,6 @@ tensorboard-data-server==0.6.1
     # via tensorboard
 tensorboard-plugin-wit==1.8.1
     # via tensorboard
-toml==0.10.2
-    # via pre-commit
 tomli==2.0.1
     # via
     #   black
@@ -207,7 +199,7 @@ toolz==0.12.0
     #   deeprl (pyproject.toml)
 torch==1.13.1
     # via deeprl (pyproject.toml)
-torch-tb-profiler==0.4.0
+torch-tb-profiler==0.4.1
     # via deeprl (pyproject.toml)
 typing-extensions==4.4.0
     # via

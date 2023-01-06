@@ -1,8 +1,3 @@
-"""
-Author's PyTorch implementation of TD3 for OpenAI gym tasks
-https://github.com/sfujim/TD3/blob/master/TD3.py
-"""
-
 from copy import deepcopy
 from functools import partial
 from itertools import cycle
@@ -42,10 +37,10 @@ class TD3:
         experience_replay: ExperienceReplay,
         batch_size: int,
         discount_factor: float,
-        polyak: float,
+        target_smoothing_factor: float,
         policy_noise: Union[ActionNoise, None],
         smoothing_noise_stddev: float,
-        smoothing_noise_clip: float,
+        smoothing_noise_clip: float,  # Norm length to clip target policy smoothing noise
         num_critics: int = 2,
         policy_delay: int = 2,
     ) -> None:
@@ -70,7 +65,7 @@ class TD3:
         self._batch_size = batch_size
 
         self._discount_factor = discount_factor
-        self._polyak = polyak
+        self._target_smoothing_factor = target_smoothing_factor
         self._policy_noise = policy_noise
         self._smoothing_noise_clip = smoothing_noise_clip
         self._smoothing_noise_stddev = smoothing_noise_stddev
@@ -95,7 +90,6 @@ class TD3:
             return
 
         # Abbreviating to mathematical italic unicode char for readability
-        # fmt: off
         𝑠 = batch.states
         𝘢 = batch.actions
         𝑟 = batch.rewards
@@ -104,12 +98,11 @@ class TD3:
         𝛾 = self._discount_factor
         𝜎 = self._smoothing_noise_stddev
         𝑐 = self._smoothing_noise_clip
-        𝜇 = self._policy  # Deterministic policy is usually denoted by 𝜇, and stochastic " 𝜋
+        𝜇 = self._policy  # Deterministic policy is usually denoted by 𝜇
         𝜇ʼ = self._target_policy
         𝑄_ = self._critics
         𝑄ʼ_ = self._target_critics
-        𝜌 = self._polyak
-        # fmt: on
+        𝜏 = self._target_smoothing_factor
 
         # Compute target action
         𝘢ʼ: Tensor = 𝜇ʼ(𝑠ʼ)
@@ -136,15 +129,15 @@ class TD3:
             policy_loss.backward()
             self._policy_optimiser.step()
 
-            # Update frozen target networks by Polyak averaging
+            # Update frozen target networks by Polyak averaging (exponential smoothing)
             with torch.no_grad():  # stops target param from requesting grad after calc because original param require grad are involved in the calc
                 for 𝑄, 𝑄ʼ in zip(𝑄_, 𝑄ʼ_):
-                    for 𝜙, 𝜙ʼ in zip(𝑄.parameters(), 𝑄ʼ.parameters()):
-                        𝜙ʼ.mul_(𝜌)
-                        𝜙ʼ.add_((1.0 - 𝜌) * 𝜙)
-                for 𝜃, 𝜃ʼ in zip(𝜇.parameters(), 𝜇ʼ.parameters()):
-                    𝜃ʼ.mul_(𝜌)
-                    𝜃ʼ.add_((1.0 - 𝜌) * 𝜃)
+                    for 𝜃, 𝜃ʼ in zip(𝑄.parameters(), 𝑄ʼ.parameters()):
+                        𝜃ʼ.mul_(1.0 - 𝜏)
+                        𝜃ʼ.add_(𝜏 * 𝜃)
+                for 𝜙, 𝜙ʼ in zip(𝜇.parameters(), 𝜇ʼ.parameters()):
+                    𝜙ʼ.mul_(1.0 - 𝜏)
+                    𝜙ʼ.add_(𝜏 * 𝜙)
 
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:

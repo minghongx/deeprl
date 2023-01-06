@@ -16,8 +16,8 @@ td3:
   memory_capacity: 1e6
   batch_size: 1024
   discount_factor: 0.99
-  polyak: 0.99
-  clip_bound: 0.5
-  stddev: 0.2
+  target_smoothing_factor: 5e-3
+  smoothing_noise_stddev: 0.2
+  smoothing_noise_clip: 0.5
   action_noise_stddev: 0.1
   action_noise_decay_const: 1e-9

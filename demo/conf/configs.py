@@ -18,9 +18,9 @@ class TD3Config(BaseModel):
     memory_capacity: int
     batch_size: int
     discount_factor: float
-    polyak: float
-    clip_bound: float
-    stddev: float
+    target_smoothing_factor: float
+    smoothing_noise_stddev: float
+    smoothing_noise_clip: float
     action_noise_stddev: float
     action_noise_decay_const: float
 
@@ -28,7 +28,7 @@ class TD3Config(BaseModel):
         data['hidden_dims'] = OmegaConf.to_object(data['hidden_dims'])
         super().__init__(**data)
 
-    @validator('polyak')
-    def polyak_is_between_0_and_1(cls, v):
+    @validator('target_smoothing_factor')
+    def is_between_0_and_1(cls, v):
         assert 0 <= v <= 1
         return v

@@ -1,6 +1,7 @@
-from pathlib import Path
+import math
 from datetime import datetime
 from functools import partial
+from pathlib import Path
 
 import gymnasium as gym
 import torch
@@ -26,19 +27,19 @@ def train(cfg: DictConfig) -> None:
 
     agent = TD3(
         device,
-        env.observation_space.shape[0],
-        env.action_space.shape[0],
-        partial(Actor, hidden_dims=td3_cfg.hidden_dims, activation_fn='relu', output_fn='tanh'),
-        partial(Critic, hidden_dims=td3_cfg.hidden_dims, activation_fn='relu'),
+        math.prod(env.observation_space.shape),
+        math.prod(env.action_space.shape),
+        partial(Actor, hidden_dims=td3_cfg.hidden_dims),
+        partial(Critic, hidden_dims=td3_cfg.hidden_dims),
         partial(optim.Adam, lr=td3_cfg.actor_lr , weight_decay=td3_cfg.weight_decay),
         partial(optim.Adam, lr=td3_cfg.critic_lr, weight_decay=td3_cfg.weight_decay),
         UER(td3_cfg.memory_capacity),
         td3_cfg.batch_size,
         td3_cfg.discount_factor,
-        td3_cfg.polyak,
+        td3_cfg.target_smoothing_factor,
         Gaussian(td3_cfg.action_noise_stddev, td3_cfg.action_noise_decay_const),
-        td3_cfg.clip_bound,
-        td3_cfg.stddev,
+        td3_cfg.smoothing_noise_stddev,
+        td3_cfg.smoothing_noise_clip,
     )
 
     checkpoint_dir = Path(__file__).resolve().parent/'.checkpoints'/'TD3'/f'{env.spec.name}-v{env.spec.version}'/f'{datetime.now().strftime("%Y%m%d%H%M")}'

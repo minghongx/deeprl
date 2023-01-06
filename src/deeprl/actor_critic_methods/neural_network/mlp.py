@@ -1,9 +1,10 @@
-# from collections.abc import Iterable
+# from collections.abc import Callable, Iterable
 # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
-from typing import Iterable
+from typing import Callable, Iterable
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 
 
@@ -13,27 +14,18 @@ class Actor(nn.Module):
         state_dim: int,
         action_dim: int,
         hidden_dims: Iterable[int],
-        activation_fn: str,  # TODO: Python 3.11 StrEnum
-        output_fn: str,  # controls the amplitude of the output
+        activation_fn: Callable[[Tensor], Tensor] = F.relu,
+        output_fn: Callable[[Tensor], Tensor] = torch.tanh,
     ) -> None:
         super(Actor, self).__init__()
 
-        # fmt: off
-        self._activation_fn = nn.ModuleDict({
-            'relu': nn.ReLU(),
-        })[activation_fn]
-        self._output_fn = nn.ModuleDict({
-            'tanh': nn.Tanh(),
-            'softmax': nn.Softmax(dim=-1),
-        })[output_fn]
-        # fmt: on
+        dims = [state_dim] + list(hidden_dims) + [action_dim]
+        self._lyrs = nn.ModuleList(
+            [ nn.Linear(in_dim, out_dim) for in_dim, out_dim in zip(dims, dims[1:]) ])  # fmt: skip
+        self.apply(_init_weights)
 
-        dimensions = [state_dim] + list(hidden_dims) + [action_dim]
-
-        self._layers = nn.ModuleList(
-            [ nn.Linear(input_dim, output_dim) for input_dim, output_dim in zip(dimensions, dimensions[1:]) ])  # fmt: skip
-
-        self._layers.apply(_init_weights)
+        self._actv_fn = activation_fn
+        self._out_fn = output_fn  # controls the amplitude of the output
 
     def forward(self, state: Tensor) -> Tensor:
         # https://github.com/pytorch/pytorch/issues/47336
@@ -45,14 +37,14 @@ class Actor(nn.Module):
         # action = self._output_fn(self.layers[-1](
         #     reduce(lambda activation, hidden_layer: self._activation_fn(hidden_layer(activation)), self.layers[:-1], state)))
         # However, torch.jit.script raises torch.jit.frontend.UnsupportedNodeError: Lambda aren't supported
-        activation = state
-        last = len(self._layers)
-        for current, layer in enumerate(self._layers, start=1):
+        actv = state
+        last = len(self._lyrs)
+        for current, lyr in enumerate(self._lyrs, start=1):
             if current != last:
-                activation = self._activation_fn(layer(activation))
+                actv = self._actv_fn(lyr(actv))
             else:
-                activation = self._output_fn(layer(activation))
-        action = activation
+                actv = self._out_fn(lyr(actv))
+        action = actv
 
         return action
 
@@ -63,34 +55,28 @@ class Critic(nn.Module):
         state_dim: int,
         action_dim: int,
         hidden_dims: Iterable[int],
-        activation_fn: str,
+        activation_fn: Callable[[Tensor], Tensor] = F.relu,
     ) -> None:
         super(Critic, self).__init__()
 
-        # fmt: off
-        self._activation_fn = nn.ModuleDict({
-            'relu': nn.ReLU(),
-        })[activation_fn]
-        # fmt: on
+        dims = [state_dim + action_dim] + list(hidden_dims) + [1]
+        self._lyrs = nn.ModuleList(
+            [ nn.Linear(in_dim, out_dim) for in_dim, out_dim in zip(dims, dims[1:]) ])  # fmt: skip
+        self.apply(_init_weights)
 
-        dimensions = [state_dim + action_dim] + list(hidden_dims) + [1]
-
-        self._layers = nn.ModuleList(
-            [ nn.Linear(input_dim, output_dim) for input_dim, output_dim in zip(dimensions, dimensions[1:]) ])  # fmt: skip
-
-        self._layers.apply(_init_weights)
+        self._actv_fn = activation_fn
 
     def forward(self, state: Tensor, action: Tensor) -> Tensor:
 
-        activation = torch.cat([state, action], dim=1)
-        for hidden_layer in self._layers[:-1]:
-            activation = self._activation_fn(hidden_layer(activation))
-        action_value = self._layers[-1](activation)
+        actv = torch.cat([state, action], dim=1)
+        for lyr in self._lyrs[:-1]:
+            actv = self._actv_fn(lyr(actv))
+        action_value = self._lyrs[-1](actv)
 
         return action_value
 
 
 @torch.no_grad()
-def _init_weights(layer: nn.Module) -> None:
-    if type(layer) == nn.Linear:
-        nn.init.xavier_uniform_(layer.weight)
+def _init_weights(m: nn.Module) -> None:
+    if isinstance(m, nn.Linear):
+        nn.init.xavier_uniform_(m.weight)
