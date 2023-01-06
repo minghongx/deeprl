@@ -6,6 +6,64 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
+from torch.distributions import Distribution, Normal
+
+
+class DiagonalGaussian(nn.Module):
+    """
+    TODO
+    Action scaling/unscaling
+
+    TODO
+    Return Tanh squashed Gaussian distribution with diagonal covariance matrix
+    - https://github.com/rail-berkeley/rlkit/blob/master/rlkit/torch/distributions.py#L312:7
+    - https://stable-baselines3.readthedocs.io/en/v1.0/_modules/stable_baselines3/common/distributions.html
+    - https://garage.readthedocs.io/en/v2020.06.2/_apidoc/garage.torch.distributions.tanh_normal.html
+    - https://pytorch.org/docs/stable/distributions.html#pathwise-derivative
+    - https://math.stackexchange.com/questions/3108216/change-of-variables-apply-tanh-to-the-gaussian-samples
+
+    FIXME
+    torch.distributions.normal.Normal is not JIT supported
+    Compiled functions can't take variable number of arguments or use keyword-only arguments with defaults:
+        File "torch/distributions/utils.py", line 11
+        def broadcast_all(*values):
+                          ~~~~~~~ <--- HERE
+    - https://github.com/pytorch/pytorch/issues/29843
+    """
+
+    def __init__(
+        self,
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: Iterable[int],
+        activation_fn: Callable[[Tensor], Tensor] = F.relu,
+    ) -> None:
+        super(DiagonalGaussian, self).__init__()
+
+        dims = [state_dim] + list(hidden_dims)
+        self._lyrs = nn.ModuleList(
+            [ nn.Linear(in_dim, out_dim) for in_dim, out_dim in zip(dims, dims[1:]) ])  # fmt: skip
+        self._mean_lyr = nn.Linear(dims[-1], action_dim)
+        self._log_stddev_lyr = nn.Linear(dims[-1], action_dim)
+        self.apply(_init_weights)
+
+        self._actv_fn = activation_fn
+
+        self._log_stddev_min = -20
+        self._log_stddev_max = 2
+
+    def forward(self, state: Tensor) -> Distribution:
+        actv = state
+
+        for lyr in self._lyrs:
+            actv = self._actv_fn(lyr(actv))
+        mean: Tensor = self._mean_lyr(actv)
+        log_stddev: Tensor = self._log_stddev_lyr(actv)
+
+        # TODO: Why?
+        log_stddev = torch.clamp(log_stddev, self._log_stddev_min, self._log_stddev_max)
+
+        return Normal(mean, log_stddev.exp())
 
 
 class Actor(nn.Module):
