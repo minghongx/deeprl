@@ -19,7 +19,7 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
 from .experience_replay import ExperienceReplay
-from .neural_network.mlp import Critic, DiagonalGaussian
+from .neural_network import ActionCritic, StochasticActor
 
 
 class SAC:
@@ -30,8 +30,8 @@ class SAC:
         device: torch.device,
         state_dim: int,
         action_dim: int,
-        policy: Callable[[int, int], DiagonalGaussian],
-        critic: Callable[[int, int], Critic],
+        policy: Callable[[int, int], StochasticActor],
+        critic: Callable[[int, int], ActionCritic],
         policy_optimiser: Callable[[Iterator[Parameter]], Optimizer],
         critic_optimiser: Callable[[Iterator[Parameter]], Optimizer],
         temperature_optimiser: Callable[[Iterable[Tensor]], Optimizer],

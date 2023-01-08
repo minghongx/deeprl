@@ -8,8 +8,10 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.distributions import Distribution, Normal
 
+from ._base import ActionCritic, DeterministicActor, StochasticActor
 
-class DiagonalGaussian(nn.Module):
+
+class GaussianPolicy(StochasticActor):
     """
     TODO
     Action scaling/unscaling
@@ -38,7 +40,7 @@ class DiagonalGaussian(nn.Module):
         hidden_dims: Iterable[int],
         activation_fn: Callable[[Tensor], Tensor] = F.relu,
     ) -> None:
-        super(DiagonalGaussian, self).__init__()
+        super(GaussianPolicy, self).__init__()
 
         dims = [state_dim] + list(hidden_dims)
         self._lyrs = nn.ModuleList(
@@ -66,7 +68,7 @@ class DiagonalGaussian(nn.Module):
         return Normal(mean, log_stddev.exp())
 
 
-class Actor(nn.Module):
+class Policy(DeterministicActor):
     def __init__(
         self,
         state_dim: int,
@@ -75,7 +77,7 @@ class Actor(nn.Module):
         activation_fn: Callable[[Tensor], Tensor] = F.relu,
         output_fn: Callable[[Tensor], Tensor] = torch.tanh,
     ) -> None:
-        super(Actor, self).__init__()
+        super(Policy, self).__init__()
 
         dims = [state_dim] + list(hidden_dims) + [action_dim]
         self._lyrs = nn.ModuleList(
@@ -107,7 +109,7 @@ class Actor(nn.Module):
         return action
 
 
-class Critic(nn.Module):
+class ActionValue(ActionCritic):
     def __init__(
         self,
         state_dim: int,
@@ -115,7 +117,7 @@ class Critic(nn.Module):
         hidden_dims: Iterable[int],
         activation_fn: Callable[[Tensor], Tensor] = F.relu,
     ) -> None:
-        super(Critic, self).__init__()
+        super(ActionCritic, self).__init__()
 
         dims = [state_dim + action_dim] + list(hidden_dims) + [1]
         self._lyrs = nn.ModuleList(

@@ -18,7 +18,7 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
 from .experience_replay import ExperienceReplay
-from .neural_network.mlp import Actor, Critic
+from .neural_network import ActionCritic, DeterministicActor
 from .noise_injection.action_space import ActionNoise, Gaussian
 
 
@@ -30,8 +30,8 @@ class TD3:
         device: torch.device,
         state_dim: int,
         action_dim: int,
-        policy: Callable[[int, int], Actor],
-        critic: Callable[[int, int], Critic],
+        policy: Callable[[int, int], DeterministicActor],
+        critic: Callable[[int, int], ActionCritic],
         policy_optimiser: Callable[[Iterator[Parameter]], Optimizer],
         critic_optimiser: Callable[[Iterator[Parameter]], Optimizer],
         experience_replay: ExperienceReplay,

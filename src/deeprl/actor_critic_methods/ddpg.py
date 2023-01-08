@@ -14,7 +14,7 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
 from .experience_replay import PER, ExperienceReplay
-from .neural_network.mlp import Actor, Critic
+from .neural_network import ActionCritic, DeterministicActor
 from .noise_injection.action_space import ActionNoise
 from .noise_injection.parameter_space import AdaptiveParameterNoise
 
@@ -22,8 +22,8 @@ from .noise_injection.parameter_space import AdaptiveParameterNoise
 class DDPG:
     def __init__(
         self,
-        policy: Actor,
-        critic: Critic,
+        policy: DeterministicActor,
+        critic: ActionCritic,
         policy_optimiser: Callable[[Iterator[Parameter]], Optimizer],
         critic_optimiser: Callable[[Iterator[Parameter]], Optimizer],
         experience_replay: ExperienceReplay,

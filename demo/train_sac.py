@@ -9,21 +9,22 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
 from deeprl.actor_critic_methods import SAC
-from deeprl.actor_critic_methods.neural_network.mlp import DiagonalGaussian, Critic
+from deeprl.actor_critic_methods.neural_network import mlp
 from deeprl.actor_critic_methods.experience_replay import UER
 
 
 def train() -> None:
 
-    env = gym.make("HalfCheetah-v4")
+    # env = gym.make("HalfCheetah-v4")
+    env = gym.make("InvertedDoublePendulum-v4")
     device = torch.device("cuda:1")
 
     agent = SAC(
         device,
         math.prod(env.observation_space.shape),
         math.prod(env.action_space.shape),
-        partial(DiagonalGaussian, hidden_dims=[256, 256]),
-        partial(Critic, hidden_dims=[256, 256]),
+        partial(mlp.GaussianPolicy, hidden_dims=[256, 256]),
+        partial(mlp.ActionValue, hidden_dims=[256, 256]),
         partial(optim.Adam, lr=3e-4),
         partial(optim.Adam, lr=3e-4),
         partial(optim.Adam, lr=3e-4),

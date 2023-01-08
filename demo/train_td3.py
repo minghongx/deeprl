@@ -12,7 +12,7 @@ from omegaconf import DictConfig
 
 from conf import EnvConfig, TD3Config
 from deeprl.actor_critic_methods import TD3
-from deeprl.actor_critic_methods.neural_network.mlp import Actor, Critic
+from deeprl.actor_critic_methods.neural_network import mlp
 from deeprl.actor_critic_methods.experience_replay import UER
 from deeprl.actor_critic_methods.noise_injection.action_space import Gaussian
 
@@ -29,8 +29,8 @@ def train(cfg: DictConfig) -> None:
         device,
         math.prod(env.observation_space.shape),
         math.prod(env.action_space.shape),
-        partial(Actor, hidden_dims=td3_cfg.hidden_dims),
-        partial(Critic, hidden_dims=td3_cfg.hidden_dims),
+        partial(mlp.Policy, hidden_dims=td3_cfg.hidden_dims),
+        partial(mlp.ActionValue, hidden_dims=td3_cfg.hidden_dims),
         partial(optim.Adam, lr=td3_cfg.actor_lr , weight_decay=td3_cfg.weight_decay),
         partial(optim.Adam, lr=td3_cfg.critic_lr, weight_decay=td3_cfg.weight_decay),
         UER(td3_cfg.memory_capacity),
