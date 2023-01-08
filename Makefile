@@ -55,11 +55,10 @@ mypy: if-in-venv
 build: if-in-venv
 	python -m build
 
-.ONESHELL:
 venv:
 	# Create the venv if it does not exist
 	test -d $(venv_name) || virtualenv --python `which python3.8` $(venv_name)
-	source $(venv_name)/bin/activate
-	python -m pip install --upgrade pip
-	python -m pip install virtualenv pip-tools pre-commit
+	source $(venv_name)/bin/activate; \
+	python -m pip install --upgrade pip; \
+	python -m pip install virtualenv pip-tools pre-commit; \
 	pre-commit install
