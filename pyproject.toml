@@ -37,6 +37,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  'wandb',
   'gymnasium[classic_control,mujoco]',
   'pettingzoo[mpe]',
   'hydra-core',

@@ -5,7 +5,7 @@ from omegaconf import OmegaConf
 
 
 class EnvConfig(BaseModel):
-    gym_name: str
+    name: str
     num_episodes: int
     device: str
 
@@ -14,7 +14,6 @@ class TD3Config(BaseModel):
     hidden_dims: List[int]
     actor_lr : float
     critic_lr: float
-    weight_decay: float
     memory_capacity: int
     batch_size: int
     discount_factor: float
@@ -22,7 +21,6 @@ class TD3Config(BaseModel):
     smoothing_noise_stddev: float
     smoothing_noise_clip: float
     action_noise_stddev: float
-    action_noise_decay_const: float
 
     def __init__(self, **data):
         data['hidden_dims'] = OmegaConf.to_object(data['hidden_dims'])

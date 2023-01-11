@@ -1,23 +1,21 @@
 env:
-  # gym_name: MountainCarContinuous-v0
-  # gym_name: HalfCheetah-v4
-  # gym_name: Pendulum-v1
-  gym_name: InvertedDoublePendulum-v4
-  # gym_name: Humanoid-v4
-  # gym_name: Ant-v4
-  num_episodes: 10_000
+  # name: MountainCarContinuous-v0
+  # name: HalfCheetah-v4
+  # name: Pendulum-v1
+  # name: InvertedDoublePendulum-v4
+  name: Humanoid-v4
+  # name: Ant-v4
+  num_episodes: 1_000_000
   device: cuda:1
 
 td3:
-  hidden_dims: [400, 300]
-  actor_lr : 1e-4
-  critic_lr: 1e-3
-  weight_decay: 1e-5
+  hidden_dims: [256, 256]
+  actor_lr : 3e-4
+  critic_lr: 3e-4
   memory_capacity: 1e6
-  batch_size: 1024
+  batch_size: 256
   discount_factor: 0.99
   target_smoothing_factor: 5e-3
   smoothing_noise_stddev: 0.2
   smoothing_noise_clip: 0.5
   action_noise_stddev: 0.1
-  action_noise_decay_const: 1e-9
