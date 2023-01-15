@@ -1,6 +1,5 @@
 import math
 from functools import partial
-from pathlib import Path
 
 import gymnasium as gym
 import hydra
@@ -15,6 +14,7 @@ from deeprl.actor_critic_methods.neural_network import mlp
 from deeprl.actor_critic_methods.experience_replay import UER
 from deeprl.actor_critic_methods.noise_injection.action_space import Gaussian
 
+from torch.profiler import profile, ProfilerActivity
 
 @hydra.main(version_base=None, config_path='conf', config_name='train_td3')
 def train(cfg: DictConfig) -> None:
@@ -41,34 +41,43 @@ def train(cfg: DictConfig) -> None:
         td3_cfg.smoothing_noise_clip,
     )
 
-    run = wandb.init(project="TD3_HPs_tuning", config=OmegaConf.to_container(cfg, resolve=True))
+    run = wandb.init(project="optimise-TD3", config=OmegaConf.to_container(cfg, resolve=True))
 
-    for episode in range(env_cfg.num_episodes):
-        state, _ = env.reset()
-        state = torch.tensor(state, device=device, dtype=torch.float32)
-        episodic_return = torch.zeros(1, device=device)
+    with profile(
+        activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+        schedule=torch.profiler.schedule(
+            skip_first=2048, wait=10, warmup=13, active=27, repeat=4),
+        on_trace_ready=torch.profiler.tensorboard_trace_handler('./traces'),
+        profile_memory=True,
+        with_stack=True,
+    ) as profiler:
+        for episode in range(env_cfg.num_episodes):
+            state, _ = env.reset()
+            state = torch.tensor(state, device=device, dtype=torch.float32)
+            episodic_return = torch.zeros(1, device=device)
 
-        while True:
-            action = agent.compute_action(state)
+            while True:
+                action = agent.compute_action(state)
 
-            next_state, reward, terminated, truncated, _ = env.step(action.cpu().numpy())
-            next_state = torch.tensor(next_state  , device=device, dtype=torch.float32)
-            # Convert to size(1,) tensor
-            reward     = torch.tensor([reward]    , device=device, dtype=torch.float32)
-            terminated = torch.tensor([terminated], device=device, dtype=torch.bool)
+                next_state, reward, terminated, truncated, _ = env.step(action.cpu().numpy())
+                next_state = torch.tensor(next_state  , device=device, dtype=torch.float32)
+                # Convert to size(1,) tensor
+                reward     = torch.tensor([reward]    , device=device, dtype=torch.float32)
+                terminated = torch.tensor([terminated], device=device, dtype=torch.bool)
 
-            episodic_return += reward
-            # Store a transition in the experience replay and perform one step of the optimisation
-            agent.step(state, action, reward, next_state, terminated)
+                episodic_return += reward
+                # Store a transition in the experience replay and perform one step of the optimisation
+                agent.step(state, action, reward, next_state, terminated)
 
-            if terminated or truncated:
-                break
-            # Move to the next state
-            state = next_state
+                profiler.step()
+                if terminated or truncated:
+                    break
+                # Move to the next state
+                state = next_state
 
-        run.log({
-            "episodic_return": episodic_return,
-        })
+            run.log({
+                "episodic_return": episodic_return,
+            })
 
 
 if __name__ == '__main__':
