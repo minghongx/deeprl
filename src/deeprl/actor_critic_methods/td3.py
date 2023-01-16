@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import partial
-from itertools import cycle
+from itertools import chain, cycle
 
 # from collections.abc import Callable, Iterator
 from typing import Union  # TODO: Unnecessary since version 3.10. See PEP 604.
@@ -38,7 +38,7 @@ class TD3:
         batch_size: int,
         discount_factor: float,
         target_smoothing_factor: float,
-        policy_noise: Union[ActionNoise, None],
+        exploration_noise: Union[ActionNoise, None],
         smoothing_noise_stddev: float,
         smoothing_noise_clip: float,  # Norm length to clip target policy smoothing noise
         num_critics: int = 2,
@@ -47,7 +47,7 @@ class TD3:
 
         self._policy = policy(state_dim, action_dim).to(device)
         self._critics = [
-            deepcopy(critic(state_dim, action_dim).to(device))
+            critic(state_dim, action_dim).to(device)
             for _ in range(num_critics)
         ]
         self._target_policy = deepcopy(self._policy)
@@ -57,16 +57,15 @@ class TD3:
         [net.requires_grad_(False) for net in self._target_critics]
 
         self._policy_optimiser = policy_optimiser(self._policy.parameters())
-        self._critic_optimisers = [
-            critic_optimiser(critic.parameters()) for critic in self._critics
-        ]
+        self._critic_optimiser = critic_optimiser(
+            chain(*[critic.parameters() for critic in self._critics]))
 
         self._experience_replay = experience_replay
         self._batch_size = batch_size
 
         self._discount_factor = discount_factor
         self._target_smoothing_factor = target_smoothing_factor
-        self._policy_noise = policy_noise
+        self._exploration_noise = exploration_noise
         self._smoothing_noise_clip = smoothing_noise_clip
         self._smoothing_noise_stddev = smoothing_noise_stddev
         self._policy_delay = cycle(range(policy_delay))
@@ -104,21 +103,18 @@ class TD3:
         𝑄ʼ_ = self._target_critics
         𝜏 = self._target_smoothing_factor
 
-        # Compute target action
-        𝘢ʼ: Tensor = 𝜇ʼ(𝑠ʼ)
-
         # Target policy smoothing: add clipped noise to the target action
-        ã = 𝘢ʼ + 𝘢ʼ.clone().normal_(0, 𝜎).clamp_(-𝑐, 𝑐)
-        ã.clamp_(-1, 1)  # clipped to lie in valid action range FIXME: hard-code range
+        ϵ = (torch.randn_like(𝘢) * 𝜎).clamp(-𝑐, 𝑐)  # Clipped noise
+        ã = (𝜇ʼ(𝑠ʼ) + ϵ).clamp(-1, 1)  # clipped to lie in valid action range FIXME: hard-code range
 
         # Clipped double-Q learning
         𝑦 = 𝑟 + ~𝑑 * 𝛾 * min(*[𝑄ʼ(𝑠ʼ, ã) for 𝑄ʼ in 𝑄ʼ_])  # computes learning target
         action_values = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
         critic_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
         critic_loss: Tensor = critic_loss_fn(action_values)
-        [critic_optimiser.zero_grad() for critic_optimiser in self._critic_optimisers]  # type: ignore
+        self._critic_optimiser.zero_grad()
         critic_loss.backward()
-        [critic_optimiser.step() for critic_optimiser in self._critic_optimisers]
+        self._critic_optimiser.step()
 
         # "Delayed" policy updates
         if next(self._policy_delay) == 0:
@@ -143,10 +139,10 @@ class TD3:
     def compute_action(self, state: Tensor) -> Tensor:
         action: Tensor = self._policy(state)
         # TODO: Avaliable since version 3.10. See PEP 634
-        # match self._policy_noise:
+        # match self._exploration_noise:
         #     case Gaussian():
         #     case _:
-        if isinstance(self._policy_noise, Gaussian):
-            action += self._policy_noise(action.size(), action.device)
-            action.clamp_(-1, 1)  # FIXME: hard-code action range
+        if isinstance(self._exploration_noise, Gaussian):
+            noise = self._exploration_noise(action)
+            action = (action + noise).clamp(-1, 1)  # FIXME: hard-code action range
         return action
