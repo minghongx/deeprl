@@ -1,13 +1,27 @@
+"""
+TODO 3.9
+Generic Alias Type and PEP 585
+
+TODO 3.10
+Adopt PEP 604
+
+TODO 3.10
+Convert multiple isinstance checks to structural pattern matching (PEP 634).
+
+TODO
+Proper type hint for functools.partial.
+"""
+
 from copy import deepcopy
 from functools import partial
 from itertools import chain, cycle
 
-# from collections.abc import Callable, Iterator
-from typing import Union  # TODO: Unnecessary since version 3.10. See PEP 604.
-from typing import (  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
+from typing import Union
+from typing import (
     Callable,
     Iterator,
 )
+from typing import Optional
 
 import torch
 import torch.nn.functional as F
@@ -27,15 +41,13 @@ class TD3:
 
     def __init__(
         self,
-        device: torch.device,
         state_dim: int,
         action_dim: int,
         policy: Callable[[int, int], DeterministicActor],
         critic: Callable[[int, int], ActionCritic],
         policy_optimiser: Callable[[Iterator[Parameter]], Optimizer],
         critic_optimiser: Callable[[Iterator[Parameter]], Optimizer],
-        experience_replay: ExperienceReplay,
-        batch_size: int,
+        experience_replay: Callable[..., ExperienceReplay],
         discount_factor: float,
         target_smoothing_factor: float,
         exploration_noise: Union[ActionNoise, None],
@@ -43,6 +55,7 @@ class TD3:
         smoothing_noise_clip: float,  # Norm length to clip target policy smoothing noise
         num_critics: int = 2,
         policy_delay: int = 2,
+        device: Optional[torch.device] = None,
     ) -> None:
 
         self._policy = policy(state_dim, action_dim).to(device)
@@ -60,8 +73,7 @@ class TD3:
         self._critic_optimiser = critic_optimiser(
             chain(*[critic.parameters() for critic in self._critics]))
 
-        self._experience_replay = experience_replay
-        self._batch_size = batch_size
+        self._experience_replay = experience_replay(state_dim=state_dim, action_dim=action_dim, device=device)
 
         self._discount_factor = discount_factor
         self._target_smoothing_factor = target_smoothing_factor
@@ -84,7 +96,7 @@ class TD3:
     def _update_parameters(self) -> None:
 
         try:
-            batch = self._experience_replay.sample(self._batch_size)
+            batch = self._experience_replay.sample()
         except ValueError:
             return
 
@@ -131,17 +143,15 @@ class TD3:
                     for 𝜃, 𝜃ʼ in zip(𝑄.parameters(), 𝑄ʼ.parameters()):
                         𝜃ʼ.mul_(1.0 - 𝜏)
                         𝜃ʼ.add_(𝜏 * 𝜃)
+                        # 𝜃ʼ.copy_(𝜏 * 𝜃 + (1.0 - 𝜏) * 𝜃ʼ)
                 for 𝜙, 𝜙ʼ in zip(𝜇.parameters(), 𝜇ʼ.parameters()):
                     𝜙ʼ.mul_(1.0 - 𝜏)
                     𝜙ʼ.add_(𝜏 * 𝜙)
+                    # 𝜙ʼ.copy_(𝜏 * 𝜙 + (1.0 - 𝜏) * 𝜙ʼ)
 
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
         action: Tensor = self._policy(state)
-        # TODO: Avaliable since version 3.10. See PEP 634
-        # match self._exploration_noise:
-        #     case Gaussian():
-        #     case _:
         if isinstance(self._exploration_noise, Gaussian):
             noise = self._exploration_noise(action)
             action = (action + noise).clamp(-1, 1)  # FIXME: hard-code action range
