@@ -25,7 +25,6 @@ def train(cfg: DictConfig) -> None:
     device = torch.device(env_cfg.device)
 
     agent = TD3(
-        device,
         math.prod(env.observation_space.shape),
         math.prod(env.action_space.shape),
         partial(mlp.Policy, hidden_dims=td3_cfg.hidden_dims),
@@ -39,6 +38,7 @@ def train(cfg: DictConfig) -> None:
         Gaussian(td3_cfg.action_noise_stddev),
         td3_cfg.smoothing_noise_stddev,
         td3_cfg.smoothing_noise_clip,
+        device=device
     )
 
     run = wandb.init(project="optimise-TD3", config=OmegaConf.to_container(cfg, resolve=True))

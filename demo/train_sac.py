@@ -20,7 +20,6 @@ def train() -> None:
     device = torch.device("cuda:1")
 
     agent = SAC(
-        device,
         math.prod(env.observation_space.shape),
         math.prod(env.action_space.shape),
         partial(mlp.GaussianPolicy, hidden_dims=[256, 256]),
@@ -32,6 +31,7 @@ def train() -> None:
         256,
         0.99,
         5e-3,
+        device=device
     )
 
     with SummaryWriter(log_dir=Path(__file__).resolve().parent/'.logs'/'SAC'/f'{env.spec.name}-v{env.spec.version}'/f'{datetime.now().strftime("%Y%m%d%H%M")}') as writer:

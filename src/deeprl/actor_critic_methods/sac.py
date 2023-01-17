@@ -1,13 +1,16 @@
+"""
+TODO 3.9
+Generic Alias Type and PEP 585.
+
+TODO
+Proper type hint for functools.partial.
+"""
+
 import math
 from copy import deepcopy
 from functools import partial
-
-# from collections.abc import Callable, Iterator
-from typing import (  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
-    Callable,
-    Iterable,
-    Iterator,
-)
+from itertools import chain
+from typing import Callable, Iterable, Iterator, Optional
 
 import torch
 import torch.nn.functional as F
@@ -27,7 +30,6 @@ class SAC:
 
     def __init__(
         self,
-        device: torch.device,
         state_dim: int,
         action_dim: int,
         policy: Callable[[int, int], StochasticActor],
@@ -40,21 +42,21 @@ class SAC:
         discount_factor: float,
         target_smoothing_factor: float,  # Exponential smoothing
         num_critics: int = 2,
+        device: Optional[torch.device] = None,
     ) -> None:
 
         self._policy = policy(state_dim, action_dim).to(device)
         self._critics = [
-            deepcopy(critic(state_dim, action_dim).to(device))
-            for _ in range(num_critics)
+            critic(state_dim, action_dim).to(device) for _ in range(num_critics)
         ]
         self._target_critics = deepcopy(self._critics)
         # Freeze target critics with respect to optimisers (only update via Polyak averaging)
         [net.requires_grad_(False) for net in self._target_critics]
 
         self._policy_optimiser = policy_optimiser(self._policy.parameters())
-        self._critic_optimisers = [
-            critic_optimiser(critic.parameters()) for critic in self._critics
-        ]
+        self._critic_optimiser = critic_optimiser(
+            chain(*[critic.parameters() for critic in self._critics])
+        )
 
         self._experience_replay = experience_replay
         self._batch_size = batch_size
@@ -132,9 +134,9 @@ class SAC:
         action_values = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
         critic_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
         critic_loss: Tensor = critic_loss_fn(action_values)
-        [critic_optimiser.zero_grad() for critic_optimiser in self._critic_optimisers]  # type: ignore
+        self._critic_optimiser.zero_grad()
         critic_loss.backward()
-        [critic_optimiser.step() for critic_optimiser in self._critic_optimisers]
+        self._critic_optimiser.step()
 
         # Compute action and its log-likelihood
         𝜇: Distribution = self._policy(𝑠)
@@ -160,8 +162,7 @@ class SAC:
         with torch.no_grad():
             for 𝑄, 𝑄ʼ in zip(𝑄_, 𝑄ʼ_):
                 for 𝜃, 𝜃ʼ in zip(𝑄.parameters(), 𝑄ʼ.parameters()):
-                    𝜃ʼ.mul_(1.0 - 𝜏)
-                    𝜃ʼ.add_(𝜏 * 𝜃)
+                    𝜃ʼ.copy_(𝜏 * 𝜃 + (1.0 - 𝜏) * 𝜃ʼ)
 
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
