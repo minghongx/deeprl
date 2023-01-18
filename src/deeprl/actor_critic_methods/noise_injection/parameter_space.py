@@ -10,11 +10,11 @@ from ..neural_network import DeterministicActor
 
 class AdaptiveParameterNoise:
     def __init__(
-        self, stddev: float, desired_stddev: float, adoption_coefficient: float
+        self, stddev: float, desired_stddev: float, adoption_coeff: float
     ) -> None:
         self.stddev = stddev
         self.desired_stddev = desired_stddev
-        self.adoption_coefficient = adoption_coefficient
+        self.adoption_coeff = adoption_coeff
 
     @torch.no_grad()
     def perturb(self, policy: DeterministicActor) -> DeterministicActor:
@@ -26,18 +26,12 @@ class AdaptiveParameterNoise:
     @torch.no_grad()
     def _add_gaussian_noise_to_weights(self, m: nn.Module) -> None:
         if hasattr(m, "weight"):
-            m.weight.add_(  # FIXME: Type
-                torch.randn(m.weight.size(), device=m.weight.device) * self.stddev  # type: ignore
-            )
+            m.weight.add_(torch.randn_like(m.weight) * self.stddev)  # type: ignore
 
     @torch.no_grad()
     def adapt(self, action: Tensor, perturbed_action: Tensor) -> None:
         stddev = comp(torch.sqrt, torch.mean, torch.square)(action - perturbed_action)
-        # TODO: Avaliable since version 3.10. See PEP 634
-        # match stddev:
-        # case _ if stddev > self.desired_stddev:
-        # case _ if stddev < self.desired_stddev:
         if stddev > self.desired_stddev:
-            self.stddev *= self.adoption_coefficient
+            self.stddev *= self.adoption_coeff
         elif stddev < self.desired_stddev:
-            self.stddev /= self.adoption_coefficient
+            self.stddev /= self.adoption_coeff
