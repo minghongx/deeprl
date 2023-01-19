@@ -15,11 +15,11 @@ class ActionNoise(ABC):
 class Gaussian(ActionNoise):
     """https://en.wikipedia.org/wiki/Additive_white_Gaussian_noise"""
 
-    def __init__(self, stddev: float) -> None:
-        self.stddev = stddev
+    def __init__(self, stdev: float) -> None:
+        self.stdev = stdev
 
     def __call__(self, action: Tensor) -> Tensor:
-        return torch.randn_like(action) * self.stddev
+        return torch.randn_like(action) * self.stdev
 
 
 class OrnsteinUhlenbeck(ActionNoise):

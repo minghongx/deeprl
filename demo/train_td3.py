@@ -35,8 +35,8 @@ def train(cfg: DictConfig) -> None:
         td3_cfg.batch_size,
         td3_cfg.discount_factor,
         td3_cfg.target_smoothing_factor,
-        Gaussian(td3_cfg.action_noise_stddev),
-        td3_cfg.smoothing_noise_stddev,
+        Gaussian(td3_cfg.action_noise_stdev),
+        td3_cfg.smoothing_noise_stdev,
         td3_cfg.smoothing_noise_clip,
         device=device
     )

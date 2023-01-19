@@ -16,6 +16,6 @@ td3:
   batch_size: 256
   discount_factor: 0.99
   target_smoothing_factor: 5e-3
-  smoothing_noise_stddev: 0.2
+  smoothing_noise_stdev: 0.2
   smoothing_noise_clip: 0.5
-  action_noise_stddev: 0.1
+  action_noise_stdev: 0.1

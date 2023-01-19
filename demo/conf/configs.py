@@ -18,9 +18,9 @@ class TD3Config(BaseModel):
     batch_size: int
     discount_factor: float
     target_smoothing_factor: float
-    smoothing_noise_stddev: float
+    smoothing_noise_stdev: float
     smoothing_noise_clip: float
-    action_noise_stddev: float
+    action_noise_stdev: float
 
     def __init__(self, **data):
         data['hidden_dims'] = OmegaConf.to_object(data['hidden_dims'])

@@ -46,13 +46,13 @@ class GaussianPolicy(StochasticActor):
         self._lyrs = nn.ModuleList(
             [ nn.Linear(in_dim, out_dim) for in_dim, out_dim in zip(dims, dims[1:]) ])  # fmt: skip
         self._mean_lyr = nn.Linear(dims[-1], action_dim)
-        self._log_stddev_lyr = nn.Linear(dims[-1], action_dim)
+        self._log_stdev_lyr = nn.Linear(dims[-1], action_dim)
         self.apply(_init_weights)
 
         self._actv_fn = activation_fn
 
-        self._log_stddev_min = -20
-        self._log_stddev_max = 2
+        self._log_stdev_min = -20
+        self._log_stdev_max = 2
 
     def forward(self, state: Tensor) -> Distribution:
         actv = state
@@ -60,12 +60,12 @@ class GaussianPolicy(StochasticActor):
         for lyr in self._lyrs:
             actv = self._actv_fn(lyr(actv))
         mean: Tensor = self._mean_lyr(actv)
-        log_stddev: Tensor = self._log_stddev_lyr(actv)
+        log_stdev: Tensor = self._log_stdev_lyr(actv)
 
         # TODO: Why?
-        log_stddev = torch.clamp(log_stddev, self._log_stddev_min, self._log_stddev_max)
+        log_stdev = torch.clamp(log_stdev, self._log_stdev_min, self._log_stdev_max)
 
-        return Normal(mean, log_stddev.exp())
+        return Normal(mean, log_stdev.exp())
 
 
 class Policy(DeterministicActor):

@@ -49,7 +49,7 @@ class TD3:
         discount_factor: float,
         target_smoothing_factor: float,
         exploration_noise: Union[ActionNoise, None],
-        smoothing_noise_stddev: float,
+        smoothing_noise_stdev: float,
         smoothing_noise_clip: float,  # Norm length to clip target policy smoothing noise
         num_critics: int = 2,
         policy_delay: int = 2,
@@ -78,7 +78,7 @@ class TD3:
         self._target_smoothing_factor = target_smoothing_factor
         self._exploration_noise = exploration_noise
         self._smoothing_noise_clip = smoothing_noise_clip
-        self._smoothing_noise_stddev = smoothing_noise_stddev
+        self._smoothing_noise_stdev = smoothing_noise_stdev
         self._policy_delay = cycle(range(policy_delay))
 
     def step(
@@ -106,7 +106,7 @@ class TD3:
         𝑠ʼ = batch.next_states
         𝑑 = batch.terminateds
         𝛾 = self._discount_factor
-        𝜎 = self._smoothing_noise_stddev
+        𝜎 = self._smoothing_noise_stdev
         𝑐 = self._smoothing_noise_clip
         𝜇 = self._policy  # Deterministic policy is usually denoted by 𝜇
         𝜇ʼ = self._target_policy
