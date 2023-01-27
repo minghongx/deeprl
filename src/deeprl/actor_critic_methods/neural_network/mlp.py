@@ -6,7 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from torch.distributions import Distribution, Normal
+from torch.distributions import Distribution, Normal, TransformedDistribution
+from torch.distributions.transforms import TanhTransform
 
 from ._base import ActionCritic, DeterministicActor, StochasticActor
 
@@ -65,7 +66,8 @@ class GaussianPolicy(StochasticActor):
         # TODO: Why?
         log_stdev = torch.clamp(log_stdev, self._log_stdev_min, self._log_stdev_max)
 
-        return Normal(mean, log_stdev.exp())
+        tanh_transform = TanhTransform(cache_size=1)
+        return TransformedDistribution(Normal(mean, log_stdev.exp()), tanh_transform)
 
 
 class Policy(DeterministicActor):

@@ -6,7 +6,6 @@ TODO
 Proper type hint for functools.partial.
 """
 
-import math
 from copy import deepcopy
 from functools import partial
 from itertools import chain
@@ -92,7 +91,6 @@ class SAC:
             batch = self._experience_replay.sample(self._batch_size)
         except ValueError:
             return
-        # fmt: off
 
         # Abbreviating to mathematical italic unicode char for readability
         𝑠 = batch.states
@@ -105,34 +103,16 @@ class SAC:
         𝑄ʼ_ = self._target_qualities
         𝜏 = self._target_smoothing_factor
         log𝛼 = self._log_temperature
-        𝛼 = logα.exp().detach()  # FIXME
+        𝛼 = logα.exp().detach()
         𝓗 = self._target_entropy
-        """
-        𝜇 denotes the action distribution with infinite support (unbounded Gaussian)
-        𝜋 denotes the tanh squashed 𝜇
-        """
 
         # Compute target action and its log-likelihood
-        𝜇ʼ: Distribution = self._policy(𝑠ʼ)
-        uʼ = 𝜇ʼ.rsample()  # Reparameterised sample
-        # 𝐄𝐧𝐟𝐨𝐫𝐜𝐢𝐧𝐠 𝐀𝐜𝐭𝐢𝐨𝐧 𝐁𝐨𝐮𝐧𝐝𝐬
-        𝘢ʼ = torch.tanh(uʼ)  # Apply an invertible squashing function (tanh) to the Gaussian sample to get bounded action
-        log𝜇ʼ = 𝜇ʼ.log_prob(uʼ)
-        log𝜋ʼ: Tensor = log𝜇ʼ - 2 * (math.log(2) - uʼ - F.softplus(-2 * uʼ))  # Employ change of variables formula (SAC 2018, app C, eq 21) to compute the likelihood of the bounded action
-        """
-        The second term is mathematically equivalent to log(1 - tanh(x)^2) but more
-        numerically-stable.
-        Derivation:
-        log(1 - tanh(x)^2)
-         = log(sech(x)^2)
-         = 2 * log(sech(x))
-         = 2 * log(2e^-x / (e^-2x + 1))
-         = 2 * (log(2) - x - log(e^-2x + 1))
-         = 2 * (log(2) - x - softplus(-2x))
-        """
-        log𝜋ʼ = log𝜋ʼ.sum(dim=1, keepdim=True)  # TODO: Why?
+        𝜋ʼ: Distribution = self._policy(𝑠ʼ)
+        𝘢ʼ = 𝜋ʼ.rsample()  # Reparameterised sample
+        log𝜋ʼ: Tensor = 𝜋ʼ.log_prob(𝘢ʼ)
+        log𝜋ʼ = log𝜋ʼ.sum(dim=1, keepdim=True)  # Sum log prob of multiple actions
 
-        𝑦 = 𝑟 + ~𝑑 * 𝛾 * (min(*[𝑄ʼ(𝑠ʼ, 𝘢ʼ) for 𝑄ʼ in 𝑄ʼ_]) - 𝛼 * logπʼ)  # computes learning target
+        𝑦 = 𝑟 + ~𝑑 * 𝛾 * (min(*[𝑄ʼ(𝑠ʼ, 𝘢ʼ) for 𝑄ʼ in 𝑄ʼ_]) - 𝛼 * logπʼ)
         action_quality = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
         quality_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
         quality_loss: Tensor = quality_loss_fn(action_quality)
@@ -141,14 +121,10 @@ class SAC:
         self._quality_optimiser.step()
 
         # Compute action and its log-likelihood
-        𝜇: Distribution = self._policy(𝑠)
-        u = 𝜇.rsample()
-        # 𝐄𝐧𝐟𝐨𝐫𝐜𝐢𝐧𝐠 𝐀𝐜𝐭𝐢𝐨𝐧 𝐁𝐨𝐮𝐧𝐝𝐬
-        ã = torch.tanh(u)  # denotes the action sampled fresh from the policy (whereas 𝘢 denotes the action comes from the experience replay)
-        log𝜇 = 𝜇.log_prob(u)
-        log𝜋: Tensor = log𝜇 - 2 * (math.log(2) - u - F.softplus(-2 * u))
+        𝜋: Distribution = self._policy(𝑠)
+        ã = 𝜋.rsample()
+        log𝜋: Tensor = 𝜋.log_prob(ã)
         log𝜋 = log𝜋.sum(dim=1, keepdim=True)
-        # fmt: on
 
         policy_loss = (𝛼 * logπ - min(*[𝑄(𝑠, ã) for 𝑄 in 𝑄_])).mean()
         self._policy_optimiser.zero_grad()
@@ -168,4 +144,4 @@ class SAC:
 
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
-        return torch.tanh(self._policy(state).rsample())
+        return self._policy(state).rsample()
