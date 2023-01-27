@@ -23,7 +23,7 @@ def train() -> None:
         math.prod(env.observation_space.shape),
         math.prod(env.action_space.shape),
         partial(mlp.GaussianPolicy, hidden_dims=[256, 256]),
-        partial(mlp.ActionValue, hidden_dims=[256, 256]),
+        partial(mlp.Quality, hidden_dims=[256, 256]),
         partial(optim.Adam, lr=3e-4),
         partial(optim.Adam, lr=3e-4),
         partial(optim.Adam, lr=3e-4),

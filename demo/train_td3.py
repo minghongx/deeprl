@@ -28,7 +28,7 @@ def train(cfg: DictConfig) -> None:
         math.prod(env.observation_space.shape),
         math.prod(env.action_space.shape),
         partial(mlp.Policy, hidden_dims=td3_cfg.hidden_dims),
-        partial(mlp.ActionValue, hidden_dims=td3_cfg.hidden_dims),
+        partial(mlp.Quality, hidden_dims=td3_cfg.hidden_dims),
         partial(optim.Adam, lr=td3_cfg.actor_lr),
         partial(optim.Adam, lr=td3_cfg.critic_lr),
         UER(td3_cfg.memory_capacity),

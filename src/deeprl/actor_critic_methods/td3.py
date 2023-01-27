@@ -40,10 +40,10 @@ class TD3:
         self,
         state_dim: int,
         action_dim: int,
-        policy: Callable[[int, int], DeterministicActor],
-        critic: Callable[[int, int], ActionCritic],
-        policy_optimiser: Callable[[Iterator[Parameter]], Optimizer],
-        critic_optimiser: Callable[[Iterator[Parameter]], Optimizer],
+        policy_init: Callable[[int, int], DeterministicActor],
+        quality_init: Callable[[int, int], ActionCritic],
+        policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
+        quality_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
         experience_replay: ExperienceReplay,
         batch_size: int,
         discount_factor: float,
@@ -51,24 +51,24 @@ class TD3:
         exploration_noise: Union[ActionNoise, None],
         smoothing_noise_stdev: float,
         smoothing_noise_clip: float,  # Norm length to clip target policy smoothing noise
-        num_critics: int = 2,
+        num_qualities: int = 2,
         policy_delay: int = 2,
         device: Optional[torch.device] = None,
     ) -> None:
 
-        self._policy = policy(state_dim, action_dim).to(device)
-        self._critics = [
-            critic(state_dim, action_dim).to(device) for _ in range(num_critics)
+        self._policy = policy_init(state_dim, action_dim).to(device)
+        self._qualities = [
+            quality_init(state_dim, action_dim).to(device) for _ in range(num_qualities)
         ]
         self._target_policy = deepcopy(self._policy)
-        self._target_critics = deepcopy(self._critics)
+        self._target_qualities = deepcopy(self._qualities)
         # Freeze target networks with respect to optimisers (only update via Polyak averaging)
         self._target_policy.requires_grad_(False)
-        [net.requires_grad_(False) for net in self._target_critics]
+        [net.requires_grad_(False) for net in self._target_qualities]
 
-        self._policy_optimiser = policy_optimiser(self._policy.parameters())
-        self._critic_optimiser = critic_optimiser(
-            chain(*[critic.parameters() for critic in self._critics])
+        self._policy_optimiser = policy_optimiser_init(self._policy.parameters())
+        self._quality_optimiser = quality_optimiser_init(
+            chain(*[quality.parameters() for quality in self._qualities])
         )
 
         self._experience_replay = experience_replay
@@ -110,8 +110,8 @@ class TD3:
         𝑐 = self._smoothing_noise_clip
         𝜇 = self._policy  # Deterministic policy is usually denoted by 𝜇
         𝜇ʼ = self._target_policy
-        𝑄_ = self._critics
-        𝑄ʼ_ = self._target_critics
+        𝑄_ = self._qualities
+        𝑄ʼ_ = self._target_qualities
         𝜏 = self._target_smoothing_factor
 
         # Target policy smoothing: add clipped noise to the target action
@@ -120,23 +120,23 @@ class TD3:
 
         # Clipped double-Q learning
         𝑦 = 𝑟 + ~𝑑 * 𝛾 * min(*[𝑄ʼ(𝑠ʼ, ã) for 𝑄ʼ in 𝑄ʼ_])  # computes learning target
-        action_values = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
-        critic_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
-        critic_loss: Tensor = critic_loss_fn(action_values)
-        self._critic_optimiser.zero_grad()
-        critic_loss.backward()
-        self._critic_optimiser.step()
+        action_quality = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
+        quality_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
+        quality_loss: Tensor = quality_loss_fn(action_quality)
+        self._quality_optimiser.zero_grad()
+        quality_loss.backward()
+        self._quality_optimiser.step()
 
         # "Delayed" policy updates
         if next(self._policy_delay) == 0:
 
-            # Improve the deterministic policy just by maximizing the first Q function approximator by gradient ascent
+            # Improve the deterministic policy just by maximizing the first quality fn approximator by gradient ascent
             policy_loss: Tensor = -𝑄_[0](𝑠, 𝜇(𝑠)).mean()
             self._policy_optimiser.zero_grad()
             policy_loss.backward()
             self._policy_optimiser.step()
 
-            # Update frozen target networks by Polyak averaging (exponential smoothing)
+            # Update frozen target fn approximators by Polyak averaging (exponential smoothing)
             with torch.no_grad():  # stops target param from requesting grad after calc because original param require grad are involved in the calc
                 for 𝑄, 𝑄ʼ in zip(𝑄_, 𝑄ʼ_):
                     for 𝜃, 𝜃ʼ in zip(𝑄.parameters(), 𝑄ʼ.parameters()):

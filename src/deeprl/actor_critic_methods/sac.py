@@ -32,30 +32,30 @@ class SAC:
         self,
         state_dim: int,
         action_dim: int,
-        policy: Callable[[int, int], StochasticActor],
-        critic: Callable[[int, int], ActionCritic],
-        policy_optimiser: Callable[[Iterator[Parameter]], Optimizer],
-        critic_optimiser: Callable[[Iterator[Parameter]], Optimizer],
-        temperature_optimiser: Callable[[Iterable[Tensor]], Optimizer],
+        policy_init: Callable[[int, int], StochasticActor],
+        quality_init: Callable[[int, int], ActionCritic],
+        policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
+        quality_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
+        temperature_optimiser_init: Callable[[Iterable[Tensor]], Optimizer],
         experience_replay: ExperienceReplay,
         batch_size: int,
         discount_factor: float,
         target_smoothing_factor: float,  # Exponential smoothing
-        num_critics: int = 2,
+        num_qualities: int = 2,
         device: Optional[torch.device] = None,
     ) -> None:
 
-        self._policy = policy(state_dim, action_dim).to(device)
-        self._critics = [
-            critic(state_dim, action_dim).to(device) for _ in range(num_critics)
+        self._policy = policy_init(state_dim, action_dim).to(device)
+        self._qualities = [
+            quality_init(state_dim, action_dim).to(device) for _ in range(num_qualities)
         ]
-        self._target_critics = deepcopy(self._critics)
-        # Freeze target critics with respect to optimisers (only update via Polyak averaging)
-        [net.requires_grad_(False) for net in self._target_critics]
+        self._target_qualities = deepcopy(self._qualities)
+        # Freeze target quality networks with respect to optimisers (only update via Polyak averaging)
+        [net.requires_grad_(False) for net in self._target_qualities]
 
-        self._policy_optimiser = policy_optimiser(self._policy.parameters())
-        self._critic_optimiser = critic_optimiser(
-            chain(*[critic.parameters() for critic in self._critics])
+        self._policy_optimiser = policy_optimiser_init(self._policy.parameters())
+        self._quality_optimiser = quality_optimiser_init(
+            chain(*[quality.parameters() for quality in self._qualities])
         )
 
         self._experience_replay = experience_replay
@@ -67,7 +67,9 @@ class SAC:
         # Using log value of temperature in temperature loss are generally nicer TODO: Why?
         # https://github.com/toshikwa/soft-actor-critic.pytorch/issues/2
         self._log_temperature = torch.zeros(1, requires_grad=True, device=device)
-        self._temperature_optimiser = temperature_optimiser([self._log_temperature])
+        self._temperature_optimiser = temperature_optimiser_init(
+            [self._log_temperature]
+        )
 
         # Differential entropy can be negative TODO: How to understand?
         # https://en.wikipedia.org/wiki/Entropy_(information_theory)#Differential_entropy
@@ -99,8 +101,8 @@ class SAC:
         𝑠ʼ = batch.next_states
         𝑑 = batch.terminateds
         𝛾 = self._discount_factor
-        𝑄_ = self._critics
-        𝑄ʼ_ = self._target_critics
+        𝑄_ = self._qualities
+        𝑄ʼ_ = self._target_qualities
         𝜏 = self._target_smoothing_factor
         log𝛼 = self._log_temperature
         𝛼 = logα.exp().detach()  # FIXME
@@ -131,12 +133,12 @@ class SAC:
         log𝜋ʼ = log𝜋ʼ.sum(dim=1, keepdim=True)  # TODO: Why?
 
         𝑦 = 𝑟 + ~𝑑 * 𝛾 * (min(*[𝑄ʼ(𝑠ʼ, 𝘢ʼ) for 𝑄ʼ in 𝑄ʼ_]) - 𝛼 * logπʼ)  # computes learning target
-        action_values = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
-        critic_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
-        critic_loss: Tensor = critic_loss_fn(action_values)
-        self._critic_optimiser.zero_grad()
-        critic_loss.backward()
-        self._critic_optimiser.step()
+        action_quality = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
+        quality_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
+        quality_loss: Tensor = quality_loss_fn(action_quality)
+        self._quality_optimiser.zero_grad()
+        quality_loss.backward()
+        self._quality_optimiser.step()
 
         # Compute action and its log-likelihood
         𝜇: Distribution = self._policy(𝑠)
@@ -158,7 +160,7 @@ class SAC:
         temperature_loss.backward()
         self._temperature_optimiser.step()
 
-        # Update frozen target critics by Polyak averaging (exponential smoothing)
+        # Update frozen target quality fn approximators by Polyak averaging (exponential smoothing)
         with torch.no_grad():
             for 𝑄, 𝑄ʼ in zip(𝑄_, 𝑄ʼ_):
                 for 𝜃, 𝜃ʼ in zip(𝑄.parameters(), 𝑄ʼ.parameters()):

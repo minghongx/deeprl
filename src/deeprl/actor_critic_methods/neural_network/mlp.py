@@ -109,7 +109,7 @@ class Policy(DeterministicActor):
         return action
 
 
-class ActionValue(ActionCritic):
+class Quality(ActionCritic):
     def __init__(
         self,
         state_dim: int,
