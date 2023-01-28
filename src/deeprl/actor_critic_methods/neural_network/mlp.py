@@ -17,14 +17,6 @@ class GaussianPolicy(StochasticActor):
     TODO
     Action scaling/unscaling
 
-    TODO
-    Return Tanh squashed Gaussian distribution with diagonal covariance matrix
-    - https://github.com/rail-berkeley/rlkit/blob/master/rlkit/torch/distributions.py#L312:7
-    - https://stable-baselines3.readthedocs.io/en/v1.0/_modules/stable_baselines3/common/distributions.html
-    - https://garage.readthedocs.io/en/v2020.06.2/_apidoc/garage.torch.distributions.tanh_normal.html
-    - https://pytorch.org/docs/stable/distributions.html#pathwise-derivative
-    - https://math.stackexchange.com/questions/3108216/change-of-variables-apply-tanh-to-the-gaussian-samples
-
     FIXME
     torch.distributions.normal.Normal is not JIT supported
     Compiled functions can't take variable number of arguments or use keyword-only arguments with defaults:
