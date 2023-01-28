@@ -3,72 +3,72 @@
 # https://pypi.org/classifiers/
 
 [build-system]
-requires = ['hatchling']
-build-backend = 'hatchling.build'
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
-name = 'deeprl'
-description = 'My own implementation of deep reinforcement learning algorithms.'
-license = 'ISC'
+name = "deeprl"
+description = "My own implementation of deep reinforcement learning algorithms."
+license = "ISC"
 authors = [
-  { name = 'Minghong Xu', email = '86758413+MinghongAlexXu@users.noreply.github.com' },
+  { name = "Minghong Xu", email = "86758413+MinghongAlexXu@users.noreply.github.com" },
 ]
 classifiers = [
-  'Private :: Do Not Upload',
-  'Development Status :: 1 - Planning',
-  'Topic :: Scientific/Engineering :: Artificial Intelligence',
-  'Intended Audience :: Science/Research',
-  'Natural Language :: English',
-  'Operating System :: POSIX :: Linux',
-  'Environment :: GPU :: NVIDIA CUDA :: 11.7',
-  'Programming Language :: Python :: 3.8',
-  'Programming Language :: Python :: 3.9',
-  'Programming Language :: Python :: 3.10',
-  'Programming Language :: Python :: Implementation :: CPython',
-  'Typing :: Typed',
+  "Private :: Do Not Upload",
+  "Development Status :: 1 - Planning",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Operating System :: POSIX :: Linux",
+  "Environment :: GPU :: NVIDIA CUDA :: 11.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Typing :: Typed",
 ]
-version = '0.0.0'
-requires-python = '>=3.8,<3.11'
+version = "0.0.0"
+requires-python = ">=3.8,<3.11"
 dependencies = [
-  'torch',
-  'cytoolz',
-  'attrs',
+  "torch",
+  "cytoolz",
+  "attrs",
 ]
 
 [project.optional-dependencies]
 dev = [
-  'wandb',
-  'gymnasium[classic_control,mujoco]',
-  'pettingzoo[mpe]',
-  'hydra-core',
-  'pydantic',
-  'toolz',
-  'pre-commit',
-  'debugpy',
-  'mypy',
-  'ruff',
-  'black',
-  'isort',
-  'py-spy',
-  'scalene',
-  'torch-tb-profiler',
+  "wandb",
+  "gymnasium[classic_control,mujoco]",
+  "pettingzoo[mpe]",
+  "hydra-core",
+  "pydantic",
+  "toolz",
+  "pre-commit",
+  "debugpy",
+  "mypy",
+  "ruff",
+  "black",
+  "isort",
+  "py-spy",
+  "scalene",
+  "torch-tb-profiler",
 ]
 
 [tool.ruff]
 # Enable Pyflakes and pycodestyle rules.
-select = ['E', 'F']
+select = ["E", "F"]
 # Never enforce `E501` (line length violations).
-ignore = ['E501']
+ignore = ["E501"]
 # Always autofix, but never try to fix `F401` (unused imports).
 fix = false
-unfixable = ['F401']
+unfixable = ["F401"]
 # Ignore `E402` (import violations) in all `__init__.py` files
 [tool.ruff.per-file-ignores]
-'__init__.py' = ['E402']
+"__init__.py" = ["E402"]
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ["py38"]
 
 [tool.isort]
-profile = 'black'
+profile = "black"

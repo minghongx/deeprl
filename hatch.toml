@@ -1,17 +1,17 @@
 [envs.default.scripts]
 all = [
-    'hatch run test:cov',
+  "hatch run test:cov",
 ]
 
 [envs.test]
 dependencies = [
-  'coverage[toml]',
-  'pytest',
-  'pytest-cov',
+  "coverage[toml]",
+  "pytest",
+  "pytest-cov",
 ]
 
 [envs.test.scripts]
-cov = 'pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=deeprl --cov=tests'
+cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=deeprl --cov=tests"
 
 [[envs.test.matrix]]
-python = ['38', '39', '310']
+python = ["38", "39", "310"]
