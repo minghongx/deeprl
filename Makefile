@@ -1,10 +1,9 @@
 # https://www.gnu.org/software/make/manual/
 
-.DEFAULT_GOAL := venv
+.DEFAULT_GOAL := .venv
 
 SHELL = bash
 
-venv_name = .venv
 sources = src/deeprl tests
 
 install: sync
@@ -55,10 +54,8 @@ mypy: if-in-venv
 build: if-in-venv
 	python -m build
 
-venv:
-	# Create the venv if it does not exist
-	test -d $(venv_name) || virtualenv --python `which python3.8` $(venv_name)
-	source $(venv_name)/bin/activate; \
-	python -m pip install --upgrade pip; \
-	python -m pip install virtualenv pip-tools pre-commit; \
+.venv:
+	python3 -m venv .venv --clear
+	source .venv/bin/activate; \
+	python -m pip install --upgrade pip pip-tools pre-commit; \
 	pre-commit install
