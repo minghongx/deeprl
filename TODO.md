@@ -5,17 +5,29 @@
     - https://github.com/ikostrikov/jaxrl2
     - https://github.com/ikostrikov/jaxrl
     - https://github.com/ikostrikov/walk_in_the_park/tree/main/rl
-- [ ] Better sum tree
-    - https://github.com/marcelpanzer/turtlebot3_machine_learning/blob/master/turtlebot3_dqn/src/turtlebot3_dqn/sumtree.py
-- [ ] Test the sum tree
-- [ ] Replace pytest-cov with coverage
+- [ ] Faster experience replay
+    - [Pre-allocated and memory-mapped experience replay](https://discuss.pytorch.org/t/rfc-torchrl-replay-buffers-pre-allocated-and-memory-mapped-experience-replay/155335)
+    - [segment tree C++ implementation](https://github.com/pytorch/rl/blob/main/torchrl/csrc/segment_tree.h)
+        - [Write a C++ extension module for Python](https://opensource.com/article/22/11/extend-c-python)
+        - https://github.com/jaromiru/AI-blog/blob/master/SumTree.py
+    - https://pytorch.org/rl/reference/generated/torchrl.data.PrioritizedReplayBuffer.html
+    - https://discuss.pytorch.org/t/how-to-make-the-replay-buffer-more-efficient/80986
+- [ ] `__all__` in each module
+    - https://pytorch.org/docs/stable/_modules/torch/distributions/transforms.html
+- [ ] Replace pytest-cov with [coverage](https://github.com/nedbat/coveragepy)
 - [ ] Open help/browser by make like [this](https://github.com/jeshraghian/snntorch/blob/cd9f9c0cf36a31e73a55de03d2e1408a379be6c5/Makefile#L4)
 - [ ] Set up CI on GitHub
 - [ ] Figure out how to build with Hatch
 - [ ] Move the demos into integration tests
 - [ ] Better clean phony targets
+- [ ] Add class docstring
+    - https://stackoverflow.com/a/69671835/20015297
+- [ ] Improve algo classes init readability by attrs
+- [ ] Replace ABC with Protocol
+    - https://jellis18.github.io/post/2022-01-11-abc-vs-protocol/
+    - > In object-oriented programming, an interface or protocol type is a data type describing a set of method signatures, the implementations of which may be provided by multiple classes that are otherwise not necessarily related to each other. A class which provides the methods listed in a protocol is said to adopt the protocol, or to implement the interface.
+    https://en.wikipedia.org/wiki/Interface_(object-oriented_programming)
 - [x] Solved. See https://github.com/Farama-Foundation/Gymnasium/pull/180#discussion_r1038995462. Fix `pip-compile gym[classic_control] -> gym[classic-control]`. See https://github.com/jazzband/pip-tools/issues/1576 for more details.
-- [x] pytest w/ [coverage](https://github.com/nedbat/coveragepy)
 - [x] [hatch](https://github.com/pypa/hatch)
 - [x] [flake8](https://github.com/PyCQA/flake8)
 - [x] [ruff](https://github.com/charliermarsh/ruff)
