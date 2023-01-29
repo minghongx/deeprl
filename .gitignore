@@ -3,6 +3,9 @@
 # Hydra outputs
 outputs/
 
+# Local W&B directory
+wandb/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
