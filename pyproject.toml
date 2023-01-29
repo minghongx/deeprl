@@ -37,21 +37,18 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "pre-commit",
+  "mypy",
+  "debugpy",
+  "py-spy",
+  "scalene",
+  "torch-tb-profiler",
   "wandb",
   "gymnasium[classic_control,mujoco]",
   "pettingzoo[mpe]",
   "hydra-core",
   "pydantic",
   "toolz",
-  "pre-commit",
-  "debugpy",
-  "mypy",
-  "ruff",
-  "black",
-  "isort",
-  "py-spy",
-  "scalene",
-  "torch-tb-profiler",
 ]
 
 [tool.ruff]
@@ -72,3 +69,5 @@ target-version = ["py38"]
 
 [tool.isort]
 profile = "black"
+line_length = 88
+skip_gitignore = true

@@ -9,9 +9,26 @@ dependencies = [
   "pytest",
   "pytest-cov",
 ]
-
 [envs.test.scripts]
 cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=deeprl --cov=tests"
-
 [[envs.test.matrix]]
 python = ["38", "39", "310"]
+
+[envs.style]
+detached = true
+dependencies = [
+  "ruff",
+  "isort",
+  "black",
+]
+[envs.style.scripts]
+check = [
+  "ruff {args:src/deeprl tests}",
+  "isort {args:src/deeprl tests} --check-only --df",
+  "black {args:src/deeprl tests} --check --diff",
+]
+format = [
+  "- ruff {args:src/deeprl tests} --fix",
+  "isort {args:src/deeprl tests}",
+  "black {args:src/deeprl tests}",
+]

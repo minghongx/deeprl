@@ -5,13 +5,15 @@
     - https://github.com/ikostrikov/jaxrl2
     - https://github.com/ikostrikov/jaxrl
     - https://github.com/ikostrikov/walk_in_the_park/tree/main/rl
-- [ ] Write large scale experiment demo using [hydra-zen](https://github.com/mit-ll-responsible-ai/hydra-zen)
 - [ ] Better sum tree
     - https://github.com/marcelpanzer/turtlebot3_machine_learning/blob/master/turtlebot3_dqn/src/turtlebot3_dqn/sumtree.py
 - [ ] Test the sum tree
 - [ ] Replace pytest-cov with coverage
-- [ ] [pylint](https://github.com/PyCQA/pylint)
 - [ ] Open help/browser by make like [this](https://github.com/jeshraghian/snntorch/blob/cd9f9c0cf36a31e73a55de03d2e1408a379be6c5/Makefile#L4)
+- [ ] Set up CI on GitHub
+- [ ] Figure out how to build with Hatch
+- [ ] Move the demos into integration tests
+- [ ] Better clean phony targets
 - [x] Solved. See https://github.com/Farama-Foundation/Gymnasium/pull/180#discussion_r1038995462. Fix `pip-compile gym[classic_control] -> gym[classic-control]`. See https://github.com/jazzband/pip-tools/issues/1576 for more details.
 - [x] pytest w/ [coverage](https://github.com/nedbat/coveragepy)
 - [x] [hatch](https://github.com/pypa/hatch)

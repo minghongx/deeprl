@@ -1,3 +1,5 @@
+/.venv/
+
 # Hydra outputs
 outputs/
 
@@ -12,4 +14,4 @@ __pycache__/
 dist/
 
 # VSCode
-.vscode/settings.json
+/.vscode/settings.json

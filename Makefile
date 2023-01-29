@@ -4,22 +4,26 @@
 
 SHELL = bash
 
-sources = src/deeprl tests
+requirements-dev.txt:
+	# TODO: Bump pip-tools to >=7.0.0. See https://github.com/jazzband/pip-tools/issues/1659
+	# https://github.com/jazzband/pip-tools#updating-requirements
+	pip-compile --upgrade --extra=dev --output-file=requirements-dev.txt pyproject.toml
+
+sync: requirements-dev.txt
+	pip-sync requirements-dev.txt
 
 install: sync
 	python3 -m pip install --editable .
 
-rqmts:
-	# https://github.com/jazzband/pip-tools/issues/1659
-	pip-compile --resolver=backtracking --extra=dev --output-file=requirements.txt pyproject.toml
+lint:
+	mypy src/deeprl tests; \
+	hatch run style:check
 
-sync:
-	pip-sync requirements.txt
+format:
+	hatch run style:format
 
 test:  # runs tests on every Python version with hatch
 	hatch run test:cov
-
-clean: clean-pycache clean-test clean-build
 
 clean-pycache:  # removes Python file artifacts https://en.wikipedia.org/wiki/Artifact_(software_development)
 	find . -type d -name '__pycache__' -exec rm -fr {} +
@@ -34,25 +38,7 @@ clean-test:  # removes test and coverage artifacts
 clean-build:  # removes build artifacts
 	rm -fr dist/
 
-if-in-venv:
-ifndef VIRTUAL_ENV
-	$(error This recipe should be executed in a virtual environment)
-endif
-
-format: if-in-venv
-	isort $(sources)
-	black $(sources)
-
-lint: if-in-venv
-	@ruff $(sources)
-	@isort $(sources) --check-only --df
-	@black $(sources) --check --diff
-
-mypy: if-in-venv
-	mypy src/deeprl
-
-build: if-in-venv
-	python -m build
+clean: clean-pycache clean-test clean-build
 
 .venv:
 	python3 -m venv .venv --clear
