@@ -1,6 +1,3 @@
-from ._base import ExperienceReplay
-
-
-class HER(ExperienceReplay):
+class HER:
     def __init__(self) -> None:
         ...

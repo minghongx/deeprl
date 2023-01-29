@@ -23,10 +23,31 @@
 - [ ] Add class docstring
     - https://stackoverflow.com/a/69671835/20015297
 - [ ] Improve algo classes init readability by attrs
-- [ ] Replace ABC with Protocol
-    - https://jellis18.github.io/post/2022-01-11-abc-vs-protocol/
-    - > In object-oriented programming, an interface or protocol type is a data type describing a set of method signatures, the implementations of which may be provided by multiple classes that are otherwise not necessarily related to each other. A class which provides the methods listed in a protocol is said to adopt the protocol, or to implement the interface.
-    https://en.wikipedia.org/wiki/Interface_(object-oriented_programming)
+- [ ] Implement a custom `__subclasshook__()` method that allows runtime structural checks without explicit registration
+    - [Make protocols special objects at runtime rather than normal ABCs](https://peps.python.org/pep-0544/#make-protocols-special-objects-at-runtime-rather-than-normal-abcs)
+
+---
+
+- [x] Replace ABC with Protocol
+    - **[Rationale](https://peps.python.org/pep-0544/#rationale-and-goals)**
+    - [Interface segregation principle](https://en.wikipedia.org/wiki/Interface_segregation_principle)
+    - [Design by contract](https://en.wikipedia.org/wiki/Design_by_contract)
+    - [Nominal](https://en.wikipedia.org/wiki/Nominal_type_system) vs [structural](https://en.wikipedia.org/wiki/Structural_type_system) type system
+    - [Every class is a type](https://peps.python.org/pep-0483/#types-vs-classes)
+    - [Existing Approaches to Structural Subtyping](https://peps.python.org/pep-0544/#existing-approaches-to-structural-subtyping)
+        - > ABCs in `typing` module already provide **structural behavior at runtime**, isinstance(Bucket(), Iterable) returns True. The main goal of this proposal is to **support such behavior statically**.
+    - [Abstract Base Classes and Protocols](https://jellis18.github.io/post/2022-01-11-abc-vs-protocol/)
+    - > In object-oriented programming, an interface or protocol type is a data type describing a set of method signatures, the implementations of which may be provided by multiple classes that are otherwise not necessarily related to each other. A class which provides the methods listed in a protocol is said to adopt the protocol, or to implement the interface. From [Wikipedia](https://en.wikipedia.org/wiki/Interface_(object-oriented_programming)).
+    - `isinstance()` with protocols is not completely safe at runtime.
+        - [Support `isinstance()` checks by default](https://peps.python.org/pep-0544/#support-isinstance-checks-by-default)
+        - `@typing.runtime_checkable` [doc](https://docs.python.org/3/library/typing.html?highlight=typing#typing.runtime_checkable)
+        - [Using `isinstance()` with protocols](https://mypy.readthedocs.io/en/latest/protocols.html#using-isinstance-with-protocols)
+    - Worth noting rejected/postponed idea in PEP 544
+        - [Protocols subclassing normal classes](https://peps.python.org/pep-0544/#protocols-subclassing-normal-classes)
+        - [Make every class a protocol by default](https://peps.python.org/pep-0544/#make-every-class-a-protocol-by-default)
+        - [Prohibit explicit subclassing of protocols by non-protocols](https://peps.python.org/pep-0544/#prohibit-explicit-subclassing-of-protocols-by-non-protocols)
+    - [Modules as implementations of protocols](https://peps.python.org/pep-0544/#modules-as-implementations-of-protocols)
+    - [match/case by type of value](https://stackoverflow.com/a/72295907/20015297)
 - [x] Solved. See https://github.com/Farama-Foundation/Gymnasium/pull/180#discussion_r1038995462. Fix `pip-compile gym[classic_control] -> gym[classic-control]`. See https://github.com/jazzband/pip-tools/issues/1576 for more details.
 - [x] [hatch](https://github.com/pypa/hatch)
 - [x] [flake8](https://github.com/PyCQA/flake8)

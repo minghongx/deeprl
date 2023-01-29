@@ -1,8 +1,8 @@
 env:
   # name: MountainCarContinuous-v0
-  name: HalfCheetah-v4
+  # name: HalfCheetah-v4
   # name: Pendulum-v1
-  # name: InvertedDoublePendulum-v4
+  name: InvertedDoublePendulum-v4
   # name: Humanoid-v4
   # name: Ant-v4
   num_episodes: 1_000_000

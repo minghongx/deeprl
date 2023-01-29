@@ -4,10 +4,10 @@ import numpy as np
 from torch import Tensor
 
 from ..._data_structures import SumTree
-from ._base import Batch, Experience, ExperienceReplay
+from ._exp import Batch, Experience
 
 
-class PER(ExperienceReplay):
+class PER:
     """Prioritised"""
 
     def __init__(self, capacity: int, α: float, ϵ: float = 0.01) -> None:

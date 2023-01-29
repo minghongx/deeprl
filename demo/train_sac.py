@@ -13,8 +13,8 @@ from deeprl.actor_critic_methods.experience_replay import UER
 
 def train() -> None:
 
-    env = gym.make("HalfCheetah-v4")
-    # env = gym.make("InvertedDoublePendulum-v4")
+    # env = gym.make("HalfCheetah-v4")
+    env = gym.make("InvertedDoublePendulum-v4")
     device = torch.device("cuda:1")
 
     agent = SAC(
@@ -32,7 +32,7 @@ def train() -> None:
         device=device
     )
 
-    run = wandb.init(project="trim-SAC")
+    run = wandb.init(project="IntegTest")
 
     for episode in range(100_000):
         state, _ = env.reset()

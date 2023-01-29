@@ -1,22 +1,51 @@
+from abc import ABC, abstractmethod
 from copy import deepcopy
 
 # from collections.abc import Callable, Iterator
-from typing import (  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
-    Callable,
-    Iterator,
-    Union,
-)
+from typing import Callable, Iterator, Protocol, Union, runtime_checkable
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
-from .experience_replay import PER, ExperienceReplay
-from .neural_network import ActionCritic, DeterministicActor
-from .noise_injection.action_space import ActionNoise
+from .experience_replay import PER, Batch
 from .noise_injection.parameter_space import AdaptiveParameterNoise
+
+
+class DeterministicActor(nn.Module, ABC):
+    @abstractmethod
+    def forward(self, state: Tensor) -> Tensor:
+        ...
+
+
+class ActionCritic(nn.Module, ABC):
+    @abstractmethod
+    def forward(self, state: Tensor, action: Tensor) -> Tensor:
+        ...
+
+
+class ExperienceReplay(Protocol):
+    def push(
+        self,
+        state: Tensor,
+        action: Tensor,
+        reward: Tensor,
+        next_state: Tensor,
+        terminated: Tensor,
+    ) -> None:
+        ...
+
+    def sample(self, batch_size: int) -> Batch:
+        ...
+
+
+@runtime_checkable
+class ActionNoise(Protocol):
+    def __call__(self, action: Tensor) -> Tensor:
+        ...
 
 
 class DDPG:

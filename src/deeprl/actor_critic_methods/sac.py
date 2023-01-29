@@ -6,12 +6,14 @@ TODO
 Proper type hint for functools.partial.
 """
 
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
 from itertools import chain
-from typing import Callable, Iterable, Iterator, Optional
+from typing import Callable, Iterable, Iterator, Optional, Protocol
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from cytoolz import comp
 from cytoolz.curried import map, reduce
@@ -20,8 +22,34 @@ from torch.distributions import Distribution
 from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
-from .experience_replay import ExperienceReplay
-from .neural_network import ActionCritic, StochasticActor
+from .experience_replay import Batch
+
+
+class StochasticActor(nn.Module, ABC):
+    @abstractmethod
+    def forward(self, state: Tensor) -> Distribution:
+        ...
+
+
+class ActionCritic(nn.Module, ABC):
+    @abstractmethod
+    def forward(self, state: Tensor, action: Tensor) -> Tensor:
+        ...
+
+
+class ExperienceReplay(Protocol):
+    def push(
+        self,
+        state: Tensor,
+        action: Tensor,
+        reward: Tensor,
+        next_state: Tensor,
+        terminated: Tensor,
+    ) -> None:
+        ...
+
+    def sample(self, batch_size: int) -> Batch:
+        ...
 
 
 class SAC:

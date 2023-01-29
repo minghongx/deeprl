@@ -9,10 +9,8 @@ from torch import Tensor
 from torch.distributions import Distribution, Normal, TransformedDistribution
 from torch.distributions.transforms import TanhTransform
 
-from ._base import ActionCritic, DeterministicActor, StochasticActor
 
-
-class GaussianPolicy(StochasticActor):
+class GaussianPolicy(nn.Module):
     """
     TODO
     Action scaling/unscaling
@@ -33,7 +31,7 @@ class GaussianPolicy(StochasticActor):
         hidden_dims: Iterable[int],
         activation_fn: Callable[[Tensor], Tensor] = F.relu,
     ) -> None:
-        super(GaussianPolicy, self).__init__()
+        super().__init__()
 
         dims = [state_dim] + list(hidden_dims)
         self._lyrs = nn.ModuleList(
@@ -62,7 +60,7 @@ class GaussianPolicy(StochasticActor):
         return TransformedDistribution(Normal(mean, log_stdev.exp()), tanh_transform)
 
 
-class Policy(DeterministicActor):
+class Policy(nn.Module):
     def __init__(
         self,
         state_dim: int,
@@ -71,7 +69,7 @@ class Policy(DeterministicActor):
         activation_fn: Callable[[Tensor], Tensor] = F.relu,
         output_fn: Callable[[Tensor], Tensor] = torch.tanh,
     ) -> None:
-        super(Policy, self).__init__()
+        super().__init__()
 
         dims = [state_dim] + list(hidden_dims) + [action_dim]
         self._lyrs = nn.ModuleList(
@@ -103,7 +101,7 @@ class Policy(DeterministicActor):
         return action
 
 
-class Quality(ActionCritic):
+class Quality(nn.Module):
     def __init__(
         self,
         state_dim: int,
@@ -111,7 +109,7 @@ class Quality(ActionCritic):
         hidden_dims: Iterable[int],
         activation_fn: Callable[[Tensor], Tensor] = F.relu,
     ) -> None:
-        super(ActionCritic, self).__init__()
+        super().__init__()
 
         dims = [state_dim + action_dim] + list(hidden_dims) + [1]
         self._lyrs = nn.ModuleList(

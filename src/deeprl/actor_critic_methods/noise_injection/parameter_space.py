@@ -5,8 +5,6 @@ import torch.nn as nn
 from cytoolz import comp
 from torch import Tensor
 
-from ..neural_network import DeterministicActor
-
 
 class AdaptiveParameterNoise:
     def __init__(
@@ -17,10 +15,9 @@ class AdaptiveParameterNoise:
         self.adoption_coeff = adoption_coeff
 
     @torch.no_grad()
-    def perturb(self, policy: DeterministicActor) -> DeterministicActor:
-        perturbed_policy = deepcopy(policy)
+    def perturb(self, policy: nn.Module) -> nn.Module:
+        perturbed_policy = deepcopy(policy).apply(self._add_gaussian_noise_to_weights)
         perturbed_policy.requires_grad_(False)
-        perturbed_policy.apply(self._add_gaussian_noise_to_weights)
         return perturbed_policy
 
     @torch.no_grad()

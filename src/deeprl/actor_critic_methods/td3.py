@@ -15,12 +15,14 @@ FIXME
 Hard-code action range
 """
 
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
 from itertools import chain, cycle
-from typing import Callable, Iterator, Optional, Union
+from typing import Callable, Iterator, Optional, Protocol, runtime_checkable
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from cytoolz import comp
 from cytoolz.curried import map, reduce
@@ -28,9 +30,40 @@ from torch import Tensor, add, min
 from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
-from .experience_replay import ExperienceReplay
-from .neural_network import ActionCritic, DeterministicActor
-from .noise_injection.action_space import ActionNoise, Gaussian
+from .experience_replay import Batch
+
+
+class DeterministicActor(nn.Module, ABC):
+    @abstractmethod
+    def forward(self, state: Tensor) -> Tensor:
+        ...
+
+
+class ActionCritic(nn.Module, ABC):
+    @abstractmethod
+    def forward(self, state: Tensor, action: Tensor) -> Tensor:
+        ...
+
+
+class ExperienceReplay(Protocol):
+    def push(
+        self,
+        state: Tensor,
+        action: Tensor,
+        reward: Tensor,
+        next_state: Tensor,
+        terminated: Tensor,
+    ) -> None:
+        ...
+
+    def sample(self, batch_size: int) -> Batch:
+        ...
+
+
+@runtime_checkable
+class ActionNoise(Protocol):
+    def __call__(self, action: Tensor) -> Tensor:
+        ...
 
 
 class TD3:
@@ -48,7 +81,7 @@ class TD3:
         batch_size: int,
         discount_factor: float,
         target_smoothing_factor: float,
-        exploration_noise: Union[ActionNoise, None],
+        exploration_noise: Optional[ActionNoise],
         smoothing_noise_stdev: float,
         smoothing_noise_clip: float,  # Norm length to clip target policy smoothing noise
         num_qualities: int = 2,
@@ -147,7 +180,7 @@ class TD3:
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
         action: Tensor = self._policy(state)
-        if isinstance(self._exploration_noise, Gaussian):
+        if isinstance(self._exploration_noise, ActionNoise):
             noise = self._exploration_noise(action)
             action = (action + noise).clamp(-1, 1)
         return action

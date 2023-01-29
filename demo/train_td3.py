@@ -41,7 +41,7 @@ def train(cfg: DictConfig) -> None:
         device=device
     )
 
-    run = wandb.init(project="optimise-TD3", config=OmegaConf.to_container(cfg, resolve=True))
+    run = wandb.init(project="IntegTest", config=OmegaConf.to_container(cfg, resolve=True))
 
     with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],

@@ -1,18 +1,8 @@
-from abc import ABC, abstractmethod
-
 import torch
 from torch import Tensor
 
 
-class ActionNoise(ABC):
-    """Random process for action exploration"""
-
-    @abstractmethod
-    def __call__(self, action: Tensor) -> Tensor:
-        ...
-
-
-class Gaussian(ActionNoise):
+class Gaussian:
     """https://en.wikipedia.org/wiki/Additive_white_Gaussian_noise"""
 
     def __init__(self, stdev: float) -> None:
@@ -22,7 +12,7 @@ class Gaussian(ActionNoise):
         return torch.randn_like(action) * self.stdev
 
 
-class OrnsteinUhlenbeck(ActionNoise):
+class OrnsteinUhlenbeck:
     """
     It stabilises zero-mean Gaussian Noise.
     It helps agent explore better in an inertial system.

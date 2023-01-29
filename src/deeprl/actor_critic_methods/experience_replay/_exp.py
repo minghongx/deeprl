@@ -1,9 +1,5 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields
-from typing import (
-    Iterator,  # TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
-)
-from typing import Sequence
+from typing import Iterator, Sequence
 
 import torch
 from attrs import define, field
@@ -34,21 +30,3 @@ class Batch:
     def __attrs_post_init__(self) -> None:
         for attr, unstacked in zip(fields(Experience), zip(*self.experiences)):
             setattr(self, attr.name + "s", torch.stack(unstacked))
-
-
-class ExperienceReplay(ABC):
-    @abstractmethod
-    def push(
-        self,
-        state: Tensor,
-        action: Tensor,
-        reward: Tensor,
-        next_state: Tensor,
-        terminated: Tensor,
-    ) -> None:
-        ...
-
-    # TODO: https://docs.python.org/3/library/typing.html#typing.overload
-    @abstractmethod
-    def sample(self, batch_size: int) -> Batch:
-        ...

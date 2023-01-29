@@ -2,10 +2,10 @@ import numpy as np
 from torch import Tensor
 
 from ..._data_structures import RotatingList
-from ._base import Batch, Experience, ExperienceReplay
+from ._exp import Batch, Experience
 
 
-class UER(ExperienceReplay):
+class UER:
     """
     Uniformly sampled
 
