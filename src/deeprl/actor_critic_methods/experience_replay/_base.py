@@ -32,8 +32,8 @@ class Batch:
     terminateds: Tensor = field(init=False)
 
     def __attrs_post_init__(self) -> None:
-        for field, unstacked in zip(fields(Experience), zip(*self.experiences)):
-            setattr(self, field.name + "s", torch.stack(unstacked))
+        for attr, unstacked in zip(fields(Experience), zip(*self.experiences)):
+            setattr(self, attr.name + "s", torch.stack(unstacked))
 
 
 class ExperienceReplay(ABC):

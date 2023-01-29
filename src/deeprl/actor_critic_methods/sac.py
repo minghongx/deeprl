@@ -103,7 +103,7 @@ class SAC:
         𝑄ʼ_ = self._target_qualities
         𝜏 = self._target_smoothing_factor
         log𝛼 = self._log_temperature
-        𝛼 = logα.exp().detach()
+        𝛼 = log𝛼.exp().detach()
         𝓗 = self._target_entropy
 
         # Compute target action and its log-likelihood
@@ -112,7 +112,7 @@ class SAC:
         log𝜋ʼ: Tensor = 𝜋ʼ.log_prob(𝘢ʼ)
         log𝜋ʼ = log𝜋ʼ.sum(dim=1, keepdim=True)  # Sum log prob of multiple actions
 
-        𝑦 = 𝑟 + ~𝑑 * 𝛾 * (min(*[𝑄ʼ(𝑠ʼ, 𝘢ʼ) for 𝑄ʼ in 𝑄ʼ_]) - 𝛼 * logπʼ)
+        𝑦 = 𝑟 + ~𝑑 * 𝛾 * (min(*[𝑄ʼ(𝑠ʼ, 𝘢ʼ) for 𝑄ʼ in 𝑄ʼ_]) - 𝛼 * log𝜋ʼ)
         action_quality = [𝑄(𝑠, 𝘢) for 𝑄 in 𝑄_]
         quality_loss_fn = comp(reduce(add), map(partial(F.mse_loss, target=𝑦)))
         quality_loss: Tensor = quality_loss_fn(action_quality)
@@ -126,7 +126,7 @@ class SAC:
         log𝜋: Tensor = 𝜋.log_prob(ã)
         log𝜋 = log𝜋.sum(dim=1, keepdim=True)
 
-        policy_loss = (𝛼 * logπ - min(*[𝑄(𝑠, ã) for 𝑄 in 𝑄_])).mean()
+        policy_loss = (𝛼 * log𝜋 - min(*[𝑄(𝑠, ã) for 𝑄 in 𝑄_])).mean()
         self._policy_optimiser.zero_grad()
         policy_loss.backward()
         self._policy_optimiser.step()

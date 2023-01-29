@@ -120,8 +120,8 @@ class DDPG:
         #     case AdaptiveParameterNoise():
         #     case _:
         if isinstance(self._policy_noise, ActionNoise):
-            action += self._policy_noise(action.size(), action.device)
-            action.clamp_(-1, 1)  # Output layer of policy network is tanh activated
+            noise = self._policy_noise(action)
+            action = (action + noise).clamp(-1, 1)
         if isinstance(self._policy_noise, AdaptiveParameterNoise):
             perturbed_policy = self._policy_noise.perturb(self._policy)
             perturbed_action = perturbed_policy(state)
