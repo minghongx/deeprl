@@ -13,9 +13,12 @@ Proper type hint for functools.partial.
 
 FIXME
 Hard-code action range
+
+FIXME
+Annotate function approximators as nn.Module is unsafe because the type annotations of
+forward method are not checked.
 """
 
-from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
 from itertools import chain, cycle
@@ -31,18 +34,6 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
 from .experience_replay import Batch
-
-
-class DeterministicActor(nn.Module, ABC):
-    @abstractmethod
-    def forward(self, state: Tensor) -> Tensor:
-        ...
-
-
-class ActionCritic(nn.Module, ABC):
-    @abstractmethod
-    def forward(self, state: Tensor, action: Tensor) -> Tensor:
-        ...
 
 
 class ExperienceReplay(Protocol):
@@ -71,16 +62,14 @@ class TD3:
 
     def __init__(
         self,
-        state_dim: int,
-        action_dim: int,
-        policy_init: Callable[[int, int], DeterministicActor],
-        quality_init: Callable[[int, int], ActionCritic],
+        policy: nn.Module,
+        quality: nn.Module,
         policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
         quality_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
         experience_replay: ExperienceReplay,
         batch_size: int,
         discount_factor: float,
-        target_smoothing_factor: float,
+        polyak_factor: float,
         exploration_noise: Optional[ActionNoise],
         smoothing_noise_stdev: float,
         smoothing_noise_clip: float,  # Norm length to clip target policy smoothing noise
@@ -89,10 +78,8 @@ class TD3:
         device: Optional[torch.device] = None,
     ) -> None:
 
-        self._policy = policy_init(state_dim, action_dim).to(device)
-        self._qualities = [
-            quality_init(state_dim, action_dim).to(device) for _ in range(num_qualities)
-        ]
+        self._policy = policy.to(device)
+        self._qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
         self._target_policy = deepcopy(self._policy)
         self._target_qualities = deepcopy(self._qualities)
         # Freeze target networks with respect to optimisers (only update via Polyak averaging)
@@ -108,11 +95,13 @@ class TD3:
         self._batch_size = batch_size
 
         self._discount_factor = discount_factor
-        self._target_smoothing_factor = target_smoothing_factor
+        self._polyak_factor = polyak_factor
         self._exploration_noise = exploration_noise
         self._smoothing_noise_clip = smoothing_noise_clip
         self._smoothing_noise_stdev = smoothing_noise_stdev
         self._policy_delay = cycle(range(policy_delay))
+
+        self.device = device
 
     def step(
         self,
@@ -145,7 +134,7 @@ class TD3:
         𝜇ʼ = self._target_policy
         𝑄_ = self._qualities
         𝑄ʼ_ = self._target_qualities
-        𝜏 = self._target_smoothing_factor
+        𝜏 = self._polyak_factor
 
         # Target policy smoothing: add clipped noise to the target action
         ϵ = (torch.randn_like(𝘢) * 𝜎).clamp(-𝑐, 𝑐)  # Clipped noise

@@ -12,22 +12,23 @@ from deeprl.actor_critic_methods.experience_replay import UER
 
 
 def train() -> None:
+    device = torch.device("cuda:1")
 
     # env = gym.make("HalfCheetah-v4")
     env = gym.make("InvertedDoublePendulum-v4")
-    device = torch.device("cuda:1")
+    obs_dim = math.prod(env.observation_space.shape)
+    action_dim = math.prod(env.action_space.shape)
 
     agent = SAC(
-        math.prod(env.observation_space.shape),
-        math.prod(env.action_space.shape),
-        partial(mlp.GaussianPolicy, hidden_dims=[256, 256]),
-        partial(mlp.Quality, hidden_dims=[256, 256]),
+        mlp.GaussianPolicy(obs_dim, action_dim, [256, 256]),
+        mlp.Quality(obs_dim, action_dim, [256, 256]),
         partial(optim.Adam, lr=3e-4),
         partial(optim.Adam, lr=3e-4),
         partial(optim.Adam, lr=3e-4),
         UER(1_000_000),
         256,
         0.99,
+        -action_dim,
         5e-3,
         device=device
     )

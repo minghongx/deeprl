@@ -6,7 +6,6 @@ TODO
 Proper type hint for functools.partial.
 """
 
-from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
 from itertools import chain
@@ -23,18 +22,6 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
 from .experience_replay import Batch
-
-
-class StochasticActor(nn.Module, ABC):
-    @abstractmethod
-    def forward(self, state: Tensor) -> Distribution:
-        ...
-
-
-class ActionCritic(nn.Module, ABC):
-    @abstractmethod
-    def forward(self, state: Tensor, action: Tensor) -> Tensor:
-        ...
 
 
 class ExperienceReplay(Protocol):
@@ -57,25 +44,22 @@ class SAC:
 
     def __init__(
         self,
-        state_dim: int,
-        action_dim: int,
-        policy_init: Callable[[int, int], StochasticActor],
-        quality_init: Callable[[int, int], ActionCritic],
+        policy: nn.Module,
+        quality: nn.Module,
         policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
         quality_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
         temperature_optimiser_init: Callable[[Iterable[Tensor]], Optimizer],
         experience_replay: ExperienceReplay,
         batch_size: int,
         discount_factor: float,
-        target_smoothing_factor: float,  # Exponential smoothing
+        target_entropy: float,
+        polyak_factor: float,  # Exponential smoothing
         num_qualities: int = 2,
         device: Optional[torch.device] = None,
     ) -> None:
 
-        self._policy = policy_init(state_dim, action_dim).to(device)
-        self._qualities = [
-            quality_init(state_dim, action_dim).to(device) for _ in range(num_qualities)
-        ]
+        self._policy = policy.to(device)
+        self._qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
         self._target_qualities = deepcopy(self._qualities)
         # Freeze target quality networks with respect to optimisers (only update via Polyak averaging)
         [net.requires_grad_(False) for net in self._target_qualities]
@@ -89,7 +73,7 @@ class SAC:
         self._batch_size = batch_size
 
         self._discount_factor = discount_factor
-        self._target_smoothing_factor = target_smoothing_factor
+        self._polyak_factor = polyak_factor
 
         # Using log value of temperature in temperature loss are generally nicer TODO: Why?
         # https://github.com/toshikwa/soft-actor-critic.pytorch/issues/2
@@ -100,7 +84,9 @@ class SAC:
 
         # Differential entropy can be negative TODO: How to understand?
         # https://en.wikipedia.org/wiki/Entropy_(information_theory)#Differential_entropy
-        self._target_entropy = -action_dim
+        self._target_entropy = target_entropy
+
+        self.device = device
 
     def step(
         self,
@@ -129,7 +115,7 @@ class SAC:
         𝛾 = self._discount_factor
         𝑄_ = self._qualities
         𝑄ʼ_ = self._target_qualities
-        𝜏 = self._target_smoothing_factor
+        𝜏 = self._polyak_factor
         log𝛼 = self._log_temperature
         𝛼 = log𝛼.exp().detach()
         𝓗 = self._target_entropy
