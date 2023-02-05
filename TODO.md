@@ -1,21 +1,8 @@
-- [ ] JAX impl
-    - https://www.deepmind.com/blog/using-jax-to-accelerate-our-research
-    - https://github.com/deepmind/jax
-    - https://forums.developer.nvidia.com/t/isaacgym-jax-integration/228214/4
-    - https://github.com/ikostrikov/jaxrl2
-    - https://github.com/ikostrikov/jaxrl
-    - https://github.com/ikostrikov/walk_in_the_park/tree/main/rl
-- [ ] Faster experience replay
-    - [Pre-allocated and memory-mapped experience replay](https://discuss.pytorch.org/t/rfc-torchrl-replay-buffers-pre-allocated-and-memory-mapped-experience-replay/155335)
-    - [segment tree C++ implementation](https://github.com/pytorch/rl/blob/main/torchrl/csrc/segment_tree.h)
-        - [Write a C++ extension module for Python](https://opensource.com/article/22/11/extend-c-python)
-        - https://github.com/jaromiru/AI-blog/blob/master/SumTree.py
-    - https://pytorch.org/rl/reference/generated/torchrl.data.PrioritizedReplayBuffer.html
-    - https://discuss.pytorch.org/t/how-to-make-the-replay-buffer-more-efficient/80986
 - [ ] `__all__` in each module
     - https://pytorch.org/docs/stable/_modules/torch/distributions/transforms.html
 - [ ] Replace pytest-cov with [coverage](https://github.com/nedbat/coveragepy)
 - [ ] Open help/browser by make like [this](https://github.com/jeshraghian/snntorch/blob/cd9f9c0cf36a31e73a55de03d2e1408a379be6c5/Makefile#L4)
+    - https://linux.die.net/man/1/xdg-open
 - [ ] Set up CI on GitHub
 - [ ] Figure out how to build with Hatch
 - [ ] Move the demos into integration tests
@@ -25,6 +12,46 @@
 - [ ] Improve algo classes init readability by attrs
 - [ ] Implement a custom `__subclasshook__()` method that allows runtime structural checks without explicit registration
     - [Make protocols special objects at runtime rather than normal ABCs](https://peps.python.org/pep-0544/#make-protocols-special-objects-at-runtime-rather-than-normal-abcs)
+
+
+### Faster experience replay
+- [Pre-allocated and memory-mapped experience replay](https://discuss.pytorch.org/t/rfc-torchrl-replay-buffers-pre-allocated-and-memory-mapped-experience-replay/155335)
+- [segment tree C++ implementation](https://github.com/pytorch/rl/blob/main/torchrl/csrc/segment_tree.h)
+    - [Write a C++ extension module for Python](https://opensource.com/article/22/11/extend-c-python)
+    - https://mesonbuild.com/Comparisons.html
+    - https://github.com/jaromiru/AI-blog/blob/master/SumTree.py
+- https://pytorch.org/rl/reference/generated/torchrl.data.PrioritizedReplayBuffer.html
+- https://discuss.pytorch.org/t/how-to-make-the-replay-buffer-more-efficient/80986
+
+
+### [JAX](https://github.com/deepmind/jax) impl
+- [From PyTorch to JAX: towards neural net frameworks that purify stateful code](https://sjmielke.com/jax-purify.htm)
+- https://github.com/ikostrikov/jaxrl2
+- https://github.com/ikostrikov/jaxrl
+- https://github.com/ikostrikov/walk_in_the_park/tree/main/rl
+- [Using JAX to accelerate our research](https://www.deepmind.com/blog/using-jax-to-accelerate-our-research)
+- [IsaacGym JAX integration](https://forums.developer.nvidia.com/t/isaacgym-jax-integration/228214/4)
+
+
+### [Replace Conditional with Polymorphism](https://www.refactoring.com/catalog/replaceConditionalWithPolymorphism.html)
+
+For example,
+```python
+import torch.nn as nn
+
+net = nn.Sequential(
+    *([nn.Conv2d(4, 4, 8)] if True else []),
+    *([nn.Conv2d(4, 4, 8)] if False else []),
+    nn.ReLU()
+)
+```
+The above code uses
+- [Conditional expressions](https://peps.python.org/pep-0308/)
+- [Iterable unpacking](https://docs.python.org/3/reference/expressions.html#expression-lists)
+- [Why does Python allow unpacking an empty iterable?](https://stackoverflow.com/questions/67359996/why-does-python-allow-unpacking-an-empty-iterable)
+
+to achieve concise dynamic configuration of the NN but lost sematics.
+
 
 ---
 
