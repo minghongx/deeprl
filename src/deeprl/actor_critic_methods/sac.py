@@ -4,16 +4,21 @@ Generic Alias Type and PEP 585.
 
 TODO
 Proper type hint for functools.partial.
+
+TODO
+How to understand differential entropy can be negative?
+https://en.wikipedia.org/wiki/Entropy_(information_theory)#Differential_entropy
 """
 
 from copy import deepcopy
 from functools import partial
 from itertools import chain
-from typing import Callable, Iterable, Iterator, Optional, Protocol
+from typing import Callable, Iterable, Iterator, List, Optional, Protocol
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from attrs import define
 from cytoolz import comp
 from cytoolz.curried import map, reduce
 from torch import Tensor, add, min
@@ -39,11 +44,26 @@ class ExperienceReplay(Protocol):
         ...
 
 
+@define
 class SAC:
     """Soft Actor-Critic"""
 
-    def __init__(
-        self,
+    _policy: nn.Module
+    _qualities: List[nn.Module]
+    _log_temperature: Tensor
+    _target_qualities: List[nn.Module]
+    _target_entropy: float
+    _policy_optimiser: Optimizer
+    _quality_optimiser: Optimizer
+    _temperature_optimiser: Optimizer
+    _experience_replay: ExperienceReplay
+    _batch_size: int
+    _discount_factor: float
+    _polyak_factor: float
+
+    @classmethod
+    def init(
+        cls,
         policy: nn.Module,
         quality: nn.Module,
         policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
@@ -56,48 +76,38 @@ class SAC:
         polyak_factor: float,  # Exponential smoothing
         num_qualities: int = 2,
         device: Optional[torch.device] = None,
-    ) -> None:
+    ) -> "SAC":
 
-        self._policy = policy.to(device)
-        self._qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
-        self._target_qualities = deepcopy(self._qualities)
-        # Freeze target quality networks with respect to optimisers (only update via Polyak averaging)
-        [net.requires_grad_(False) for net in self._target_qualities]
-
-        self._policy_optimiser = policy_optimiser_init(self._policy.parameters())
-        self._quality_optimiser = quality_optimiser_init(
-            chain(*[quality.parameters() for quality in self._qualities])
-        )
-
-        self._experience_replay = experience_replay
-        self._batch_size = batch_size
-
-        self._discount_factor = discount_factor
-        self._polyak_factor = polyak_factor
-
-        # Using log value of temperature in temperature loss are generally nicer TODO: Why?
+        policy = policy.to(device)
+        qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
+        # TODO: Why using log value of temperature in temperature loss are generally nicer?
         # https://github.com/toshikwa/soft-actor-critic.pytorch/issues/2
-        self._log_temperature = torch.zeros(1, requires_grad=True, device=device)
-        self._temperature_optimiser = temperature_optimiser_init(
-            [self._log_temperature]
+        log_temperature = torch.zeros(1, requires_grad=True, device=device)
+
+        policy_optimiser = policy_optimiser_init(policy.parameters())
+        quality_optimiser = quality_optimiser_init(
+            chain(*[quality.parameters() for quality in qualities])
         )
+        temperature_optimiser = temperature_optimiser_init([log_temperature])
 
-        # Differential entropy can be negative TODO: How to understand?
-        # https://en.wikipedia.org/wiki/Entropy_(information_theory)#Differential_entropy
-        self._target_entropy = target_entropy
+        target_qualities = deepcopy(qualities)
+        # Freeze target quality networks with respect to optimisers (only update via Polyak averaging)
+        [net.requires_grad_(False) for net in target_qualities]
 
-        self.device = device
-
-    def step(
-        self,
-        state: Tensor,
-        action: Tensor,
-        reward: Tensor,
-        next_state: Tensor,
-        terminated: Tensor,
-    ) -> None:
-        self._experience_replay.push(state, action, reward, next_state, terminated)
-        self._update_parameters()
+        return cls(
+            policy,
+            qualities,
+            log_temperature,
+            target_qualities,
+            target_entropy,
+            policy_optimiser,
+            quality_optimiser,
+            temperature_optimiser,
+            experience_replay,
+            batch_size,
+            discount_factor,
+            polyak_factor,
+        )
 
     def _update_parameters(self) -> None:
 
@@ -159,3 +169,14 @@ class SAC:
     @torch.no_grad()
     def compute_action(self, state: Tensor) -> Tensor:
         return self._policy(state).rsample()
+
+    def step(
+        self,
+        state: Tensor,
+        action: Tensor,
+        reward: Tensor,
+        next_state: Tensor,
+        terminated: Tensor,
+    ) -> None:
+        self._experience_replay.push(state, action, reward, next_state, terminated)
+        self._update_parameters()

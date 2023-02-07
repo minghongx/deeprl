@@ -27,7 +27,7 @@ def train(cfg: DictConfig) -> None:
     obs_dim = math.prod(env.observation_space.shape)
     action_dim = math.prod(env.action_space.shape)
 
-    agent = TD3(
+    agent = TD3.init(
         mlp.Policy(obs_dim, action_dim, td3_cfg.hidden_dims),
         mlp.Quality(obs_dim, action_dim, td3_cfg.hidden_dims),
         partial(optim.Adam, lr=td3_cfg.actor_lr),
@@ -39,7 +39,7 @@ def train(cfg: DictConfig) -> None:
         Gaussian(td3_cfg.action_noise_stdev),
         td3_cfg.smoothing_noise_stdev,
         td3_cfg.smoothing_noise_clip,
-        device=device
+        device=device,
     )
 
     run = wandb.init(project="IntegTest", config=OmegaConf.to_container(cfg, resolve=True))

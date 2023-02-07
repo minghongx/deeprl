@@ -17,16 +17,18 @@ Hard-code action range
 FIXME
 Annotate function approximators as nn.Module is unsafe because the type annotations of
 forward method are not checked.
+https://github.com/pytorch/pytorch/issues/45414
 """
 
 from copy import deepcopy
 from functools import partial
 from itertools import chain, cycle
-from typing import Callable, Iterator, Optional, Protocol, runtime_checkable
+from typing import Callable, Iterator, List, Optional, Protocol, runtime_checkable
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from attrs import define
 from cytoolz import comp
 from cytoolz.curried import map, reduce
 from torch import Tensor, add, min
@@ -57,11 +59,28 @@ class ActionNoise(Protocol):
         ...
 
 
+@define
 class TD3:
     """Twin-Delayed DDPG"""
 
-    def __init__(
-        self,
+    _policy: nn.Module
+    _qualities: List[nn.Module]
+    _target_policy: nn.Module
+    _target_qualities: List[nn.Module]
+    _policy_optimiser: Optimizer
+    _quality_optimiser: Optimizer
+    _experience_replay: ExperienceReplay
+    _batch_size: int
+    _discount_factor: float
+    _polyak_factor: float
+    _exploration_noise: Optional[ActionNoise]
+    _smoothing_noise_stdev: float
+    _smoothing_noise_clip: float
+    _policy_delay: cycle
+
+    @classmethod
+    def init(
+        cls,
         policy: nn.Module,
         quality: nn.Module,
         policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
@@ -76,43 +95,39 @@ class TD3:
         num_qualities: int = 2,
         policy_delay: int = 2,
         device: Optional[torch.device] = None,
-    ) -> None:
+    ) -> "TD3":
 
-        self._policy = policy.to(device)
-        self._qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
-        self._target_policy = deepcopy(self._policy)
-        self._target_qualities = deepcopy(self._qualities)
-        # Freeze target networks with respect to optimisers (only update via Polyak averaging)
-        self._target_policy.requires_grad_(False)
-        [net.requires_grad_(False) for net in self._target_qualities]
+        policy = policy.to(device)
+        qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
 
-        self._policy_optimiser = policy_optimiser_init(self._policy.parameters())
-        self._quality_optimiser = quality_optimiser_init(
-            chain(*[quality.parameters() for quality in self._qualities])
+        policy_optimiser = policy_optimiser_init(policy.parameters())
+        quality_optimiser = quality_optimiser_init(
+            chain(*[quality.parameters() for quality in qualities])
         )
 
-        self._experience_replay = experience_replay
-        self._batch_size = batch_size
+        target_policy = deepcopy(policy)
+        target_qualities = deepcopy(qualities)
 
-        self._discount_factor = discount_factor
-        self._polyak_factor = polyak_factor
-        self._exploration_noise = exploration_noise
-        self._smoothing_noise_clip = smoothing_noise_clip
-        self._smoothing_noise_stdev = smoothing_noise_stdev
-        self._policy_delay = cycle(range(policy_delay))
+        # Freeze target networks with respect to optimisers (only update via Polyak averaging)
+        target_policy.requires_grad_(False)
+        [net.requires_grad_(False) for net in target_qualities]
 
-        self.device = device
-
-    def step(
-        self,
-        state: Tensor,
-        action: Tensor,
-        reward: Tensor,
-        next_state: Tensor,
-        terminated: Tensor,
-    ) -> None:
-        self._experience_replay.push(state, action, reward, next_state, terminated)
-        self._update_parameters()
+        return cls(
+            policy,
+            qualities,
+            target_policy,
+            target_qualities,
+            policy_optimiser,
+            quality_optimiser,
+            experience_replay,
+            batch_size,
+            discount_factor,
+            polyak_factor,
+            exploration_noise,
+            smoothing_noise_stdev,
+            smoothing_noise_clip,
+            cycle(range(policy_delay)),
+        )
 
     def _update_parameters(self) -> None:
 
@@ -173,3 +188,14 @@ class TD3:
             noise = self._exploration_noise(action)
             action = (action + noise).clamp(-1, 1)
         return action
+
+    def step(
+        self,
+        state: Tensor,
+        action: Tensor,
+        reward: Tensor,
+        next_state: Tensor,
+        terminated: Tensor,
+    ) -> None:
+        self._experience_replay.push(state, action, reward, next_state, terminated)
+        self._update_parameters()

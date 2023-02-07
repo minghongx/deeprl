@@ -19,7 +19,7 @@ def train() -> None:
     obs_dim = math.prod(env.observation_space.shape)
     action_dim = math.prod(env.action_space.shape)
 
-    agent = SAC(
+    agent = SAC.init(
         mlp.GaussianPolicy(obs_dim, action_dim, [256, 256]),
         mlp.Quality(obs_dim, action_dim, [256, 256]),
         partial(optim.Adam, lr=3e-4),
