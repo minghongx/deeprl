@@ -28,8 +28,8 @@ def train(cfg: DictConfig) -> None:
     action_dim = math.prod(env.action_space.shape)
 
     agent = TD3.init(
-        mlp.Policy(obs_dim, action_dim, td3_cfg.hidden_dims),
-        mlp.Quality(obs_dim, action_dim, td3_cfg.hidden_dims),
+        mlp.Policy.init(obs_dim, action_dim, td3_cfg.hidden_dims),
+        mlp.Quality.init(obs_dim, action_dim, td3_cfg.hidden_dims),
         partial(optim.Adam, lr=td3_cfg.actor_lr),
         partial(optim.Adam, lr=td3_cfg.critic_lr),
         UER(td3_cfg.memory_capacity),

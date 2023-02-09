@@ -1,15 +1,16 @@
-# from collections.abc import Callable, Iterable
-# TODO: Deprecated since version 3.9. See Generic Alias Type and PEP 585.
-from typing import Callable, Iterable
+from typing import Callable, Sequence
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from attrs import define
 from torch import Tensor
 from torch.distributions import Distribution, Normal, TransformedDistribution
 from torch.distributions.transforms import TanhTransform
+from torch.types import Number
 
 
+@define(eq=False, slots=False)
 class GaussianPolicy(nn.Module):
     """
     TODO
@@ -22,28 +23,20 @@ class GaussianPolicy(nn.Module):
         def broadcast_all(*values):
                           ~~~~~~~ <--- HERE
     - https://github.com/pytorch/pytorch/issues/29843
+
+    FIXME
+    nn.ModuleList[nn.Linear] raises: "ModuleList" expects no type arguments
+    https://github.com/pytorch/pytorch/pull/89135
     """
 
-    def __init__(
-        self,
-        state_dim: int,
-        action_dim: int,
-        hidden_dims: Iterable[int],
-        activation_fn: Callable[[Tensor], Tensor] = F.relu,
-    ) -> None:
-        super().__init__()
+    _lyrs: nn.ModuleList
+    _mean_lyr: nn.Linear
+    _log_stdev_lyr: nn.Linear
+    _actv_fn: Callable[[Tensor], Tensor]
 
-        dims = [state_dim] + list(hidden_dims)
-        self._lyrs = nn.ModuleList(
-            [ nn.Linear(in_dim, out_dim) for in_dim, out_dim in zip(dims, dims[1:]) ])  # fmt: skip
-        self._mean_lyr = nn.Linear(dims[-1], action_dim)
-        self._log_stdev_lyr = nn.Linear(dims[-1], action_dim)
-        self.apply(_init_weights)
-
-        self._actv_fn = activation_fn
-
-        self._log_stdev_min = -20
-        self._log_stdev_max = 2
+    # Allow customisation for easier testing, and not intended to be passed
+    _log_stdev_min: Number = -20
+    _log_stdev_max: Number = 2
 
     def forward(self, state: Tensor) -> Distribution:
         actv = state
@@ -59,35 +52,57 @@ class GaussianPolicy(nn.Module):
         tanh_transform = TanhTransform(cache_size=1)
         return TransformedDistribution(Normal(mean, log_stdev.exp()), tanh_transform)
 
-
-class Policy(nn.Module):
-    def __init__(
-        self,
+    @classmethod
+    def init(
+        cls,
         state_dim: int,
         action_dim: int,
-        hidden_dims: Iterable[int],
-        activation_fn: Callable[[Tensor], Tensor] = F.relu,
-        output_fn: Callable[[Tensor], Tensor] = torch.tanh,
-    ) -> None:
+        hidden_dims: Sequence[int],
+        actv_fn: Callable[[Tensor], Tensor] = F.relu,
+    ) -> "GaussianPolicy":
+        lyrs = nn.ModuleList([nn.Linear(state_dim, hidden_dims[0])])
+        lyrs.extend(
+            [
+                nn.Linear(in_dim, out_dim)
+                for in_dim, out_dim in zip(hidden_dims, hidden_dims[1:])
+            ]
+        )
+
+        mean_lyr = nn.Linear(hidden_dims[-1], action_dim)
+        log_stdev_lyr = nn.Linear(hidden_dims[-1], action_dim)
+
+        return cls(
+            lyrs,
+            mean_lyr,
+            log_stdev_lyr,
+            actv_fn,
+        )
+
+    def __attrs_pre_init__(self) -> None:
         super().__init__()
 
-        dims = [state_dim] + list(hidden_dims) + [action_dim]
-        self._lyrs = nn.ModuleList(
-            [ nn.Linear(in_dim, out_dim) for in_dim, out_dim in zip(dims, dims[1:]) ])  # fmt: skip
+    def __attrs_post_init__(self) -> None:
         self.apply(_init_weights)
 
-        self._actv_fn = activation_fn
-        self._out_fn = output_fn  # controls the amplitude of the output
+
+@define(eq=False, slots=False)
+# eq=False prevents overriding the default hash method
+# slots=False disables slotted class to allow inheritance
+class Policy(nn.Module):
+
+    _lyrs: nn.ModuleList
+    _actv_fn: Callable[[Tensor], Tensor]
+    _out_fn: Callable[[Tensor], Tensor]
 
     def forward(self, state: Tensor) -> Tensor:
         # https://github.com/pytorch/pytorch/issues/47336
-        # activation = state
-        # for hidden_layer in self._layers[:-1]:
-        #     activation = self._activation_fn( hidden_layer(activation) )
-        # action = self._output_fn( self._layers[-1](activation) )
+        # actv = state
+        # for lyr in self._lyrs[:-1]:
+        #     actv = self._actv_fn( lyr(actv) )
+        # action = self._out_fn( self._lyrs[-1](actv) )
         # One-liner:
-        # action = self._output_fn(self.layers[-1](
-        #     reduce(lambda activation, hidden_layer: self._activation_fn(hidden_layer(activation)), self.layers[:-1], state)))
+        # action = self._out_fn(self.lyrs[-1](
+        #     reduce(lambda actv, lyr: self._actv_fn(lyr(actv)), self.lyrs[:-1], state)))
         # However, torch.jit.script raises torch.jit.frontend.UnsupportedNodeError: Lambda aren't supported
         actv = state
         last = len(self._lyrs)
@@ -96,36 +111,78 @@ class Policy(nn.Module):
                 actv = self._actv_fn(lyr(actv))
             else:
                 actv = self._out_fn(lyr(actv))
-        action = actv
+        return actv  # returns action
 
-        return action
-
-
-class Quality(nn.Module):
-    def __init__(
-        self,
+    @classmethod
+    def init(
+        cls,
         state_dim: int,
         action_dim: int,
-        hidden_dims: Iterable[int],
-        activation_fn: Callable[[Tensor], Tensor] = F.relu,
-    ) -> None:
+        hidden_dims: Sequence[int],
+        actv_fn: Callable[[Tensor], Tensor] = F.relu,
+        out_fn: Callable[[Tensor], Tensor] = torch.tanh,
+    ) -> "Policy":
+        lyrs = nn.ModuleList([nn.Linear(state_dim, hidden_dims[0])])
+        lyrs.extend(
+            [
+                nn.Linear(in_dim, out_dim)
+                for in_dim, out_dim in zip(hidden_dims, hidden_dims[1:])
+            ]
+        )
+        lyrs.append(nn.Linear(hidden_dims[-1], action_dim))
+
+        return cls(
+            lyrs,
+            actv_fn,
+            out_fn,
+        )
+
+    def __attrs_pre_init__(self) -> None:
         super().__init__()
 
-        dims = [state_dim + action_dim] + list(hidden_dims) + [1]
-        self._lyrs = nn.ModuleList(
-            [ nn.Linear(in_dim, out_dim) for in_dim, out_dim in zip(dims, dims[1:]) ])  # fmt: skip
+    def __attrs_post_init__(self) -> None:
         self.apply(_init_weights)
 
-        self._actv_fn = activation_fn
+
+@define(eq=False, slots=False)
+class Quality(nn.Module):
+
+    _lyrs: nn.ModuleList
+    _actv_fn: Callable[[Tensor], Tensor]
 
     def forward(self, state: Tensor, action: Tensor) -> Tensor:
-
         actv = torch.cat([state, action], dim=1)
         for lyr in self._lyrs[:-1]:
             actv = self._actv_fn(lyr(actv))
-        action_value = self._lyrs[-1](actv)
+        return self._lyrs[-1](actv)  # returns action quality
 
-        return action_value
+    @classmethod
+    def init(
+        cls,
+        state_dim: int,
+        action_dim: int,
+        hidden_dims: Sequence[int],
+        actv_fn: Callable[[Tensor], Tensor] = F.relu,
+    ) -> "Quality":
+        lyrs = nn.ModuleList([nn.Linear(state_dim + action_dim, hidden_dims[0])])
+        lyrs.extend(
+            [
+                nn.Linear(in_dim, out_dim)
+                for in_dim, out_dim in zip(hidden_dims, hidden_dims[1:])
+            ]
+        )
+        lyrs.append(nn.Linear(hidden_dims[-1], 1))
+
+        return cls(
+            lyrs,
+            actv_fn,
+        )
+
+    def __attrs_pre_init__(self) -> None:
+        super().__init__()
+
+    def __attrs_post_init__(self) -> None:
+        self.apply(_init_weights)
 
 
 @torch.no_grad()
