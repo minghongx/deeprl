@@ -2,17 +2,17 @@ from copy import deepcopy
 
 import torch
 import torch.nn as nn
+from attrs import define
 from cytoolz import comp
 from torch import Tensor
 
 
+@define
 class AdaptiveParameterNoise:
-    def __init__(
-        self, stdev: float, desired_stdev: float, adoption_coeff: float
-    ) -> None:
-        self.stdev = stdev
-        self.desired_stdev = desired_stdev
-        self.adoption_coeff = adoption_coeff
+
+    stdev: float
+    desired_stdev: float
+    adoption_coeff: float
 
     @torch.no_grad()
     def perturb(self, policy: nn.Module) -> nn.Module:

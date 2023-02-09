@@ -1,12 +1,13 @@
 import torch
+from attrs import define
 from torch import Tensor
 
 
+@define
 class Gaussian:
     """https://en.wikipedia.org/wiki/Additive_white_Gaussian_noise"""
 
-    def __init__(self, stdev: float) -> None:
-        self.stdev = stdev
+    stdev: float
 
     def __call__(self, action: Tensor) -> Tensor:
         return torch.randn_like(action) * self.stdev
