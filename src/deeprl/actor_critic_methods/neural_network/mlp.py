@@ -1,4 +1,4 @@
-from typing import Callable, Sequence
+from typing import Callable, Sequence, Union
 
 import torch
 import torch.nn as nn
@@ -16,13 +16,8 @@ class GaussianPolicy(nn.Module):
     TODO
     Action scaling/unscaling
 
-    FIXME
-    torch.distributions.normal.Normal is not JIT supported
-    Compiled functions can't take variable number of arguments or use keyword-only arguments with defaults:
-        File "torch/distributions/utils.py", line 11
-        def broadcast_all(*values):
-                          ~~~~~~~ <--- HERE
-    - https://github.com/pytorch/pytorch/issues/29843
+    TODO
+    Why clip log_stdev can improve numerical stability?
 
     FIXME
     nn.ModuleList[nn.Linear] raises: "ModuleList" expects no type arguments
@@ -38,19 +33,20 @@ class GaussianPolicy(nn.Module):
     _log_stdev_min: Number = -20
     _log_stdev_max: Number = 2
 
-    def forward(self, state: Tensor) -> Distribution:
+    def forward(self, state: Tensor) -> Union[Distribution, Tensor]:
         actv = state
-
         for lyr in self._lyrs:
             actv = self._actv_fn(lyr(actv))
         mean: Tensor = self._mean_lyr(actv)
-        log_stdev: Tensor = self._log_stdev_lyr(actv)
 
-        # TODO: Why?
-        log_stdev = torch.clamp(log_stdev, self._log_stdev_min, self._log_stdev_max)
-
-        tanh_transform = TanhTransform(cache_size=1)
-        return TransformedDistribution(Normal(mean, log_stdev.exp()), tanh_transform)
+        if self.training:
+            log_stdev: Tensor = self._log_stdev_lyr(actv)
+            log_stdev = torch.clamp(log_stdev, self._log_stdev_min, self._log_stdev_max)
+            stdev = log_stdev.exp()
+            tanh_transform = TanhTransform(cache_size=1)
+            return TransformedDistribution(Normal(mean, stdev), tanh_transform)
+        else:
+            return torch.tanh(mean)
 
     @classmethod
     def init(

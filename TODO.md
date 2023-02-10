@@ -9,7 +9,6 @@
 - [ ] Better clean phony targets
 - [ ] Add class docstring
     - https://stackoverflow.com/a/69671835/20015297
-- [ ] Improve algo classes init readability by attrs
 - [ ] Implement a custom `__subclasshook__()` method that allows runtime structural checks without explicit registration
     - [Make protocols special objects at runtime rather than normal ABCs](https://peps.python.org/pep-0544/#make-protocols-special-objects-at-runtime-rather-than-normal-abcs)
 
@@ -55,6 +54,7 @@ to achieve concise dynamic configuration of the NN but lost sematics.
 
 ---
 
+- [x] Improve algo classes init readability by attrs
 - [x] Replace ABC with Protocol
     - **[Rationale](https://peps.python.org/pep-0544/#rationale-and-goals)**
     - [Interface segregation principle](https://en.wikipedia.org/wiki/Interface_segregation_principle)

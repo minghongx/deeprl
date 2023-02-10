@@ -62,6 +62,9 @@ def train() -> None:
             "episodic_return": episodic_return,
         })
 
+        # Checkpointing
+        # torch.onnx.export(agent._policy.eval(), state, "policy.onnx"); agent._policy.train()
+
 
 if __name__ == '__main__':
     train()

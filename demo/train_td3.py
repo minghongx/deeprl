@@ -80,6 +80,9 @@ def train(cfg: DictConfig) -> None:
             "episodic_return": episodic_return,
         })
 
+        # Checkpointing
+        # torch.onnx.export(agent._policy, state, "policy.onnx")
+
 
 if __name__ == '__main__':
     train()
