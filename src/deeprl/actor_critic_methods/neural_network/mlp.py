@@ -1,3 +1,4 @@
+from functools import reduce
 from typing import Callable, Sequence, Union
 
 import torch
@@ -91,23 +92,8 @@ class Policy(nn.Module):
     _out_fn: Callable[[Tensor], Tensor]
 
     def forward(self, state: Tensor) -> Tensor:
-        # https://github.com/pytorch/pytorch/issues/47336
-        # actv = state
-        # for lyr in self._lyrs[:-1]:
-        #     actv = self._actv_fn( lyr(actv) )
-        # action = self._out_fn( self._lyrs[-1](actv) )
-        # One-liner:
-        # action = self._out_fn(self.lyrs[-1](
-        #     reduce(lambda actv, lyr: self._actv_fn(lyr(actv)), self.lyrs[:-1], state)))
-        # However, torch.jit.script raises torch.jit.frontend.UnsupportedNodeError: Lambda aren't supported
-        actv = state
-        last = len(self._lyrs)
-        for current, lyr in enumerate(self._lyrs, start=1):
-            if current != last:
-                actv = self._actv_fn(lyr(actv))
-            else:
-                actv = self._out_fn(lyr(actv))
-        return actv  # returns action
+        return self._out_fn(self._lyrs[-1](
+            reduce(lambda actv, lyr: self._actv_fn(lyr(actv)), self._lyrs[:-1], state)))  # fmt: skip
 
     @classmethod
     def init(
