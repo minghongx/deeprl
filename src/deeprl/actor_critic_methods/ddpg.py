@@ -61,7 +61,6 @@ class DDPG:
         polyak: float,
         policy_noise: Union[ActionNoise, AdaptiveParameterNoise, None],
     ) -> None:
-
         self._policy = policy
         self._critic = critic
         self._target_policy = deepcopy(self._policy)
@@ -92,7 +91,6 @@ class DDPG:
         self._update_parameters()
 
     def _update_parameters(self) -> None:
-
         try:
             batch = self._experience_replay.sample(self._batch_size)
         except ValueError:

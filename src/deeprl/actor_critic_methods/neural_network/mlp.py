@@ -86,7 +86,6 @@ class GaussianPolicy(nn.Module):
 # eq=False prevents overriding the default hash method
 # slots=False disables slotted class to allow inheritance
 class Policy(nn.Module):
-
     _lyrs: nn.ModuleList
     _actv_fn: Callable[[Tensor], Tensor]
     _out_fn: Callable[[Tensor], Tensor]
@@ -128,7 +127,6 @@ class Policy(nn.Module):
 
 @define(eq=False, slots=False)
 class Quality(nn.Module):
-
     _lyrs: nn.ModuleList
     _actv_fn: Callable[[Tensor], Tensor]
 

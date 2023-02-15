@@ -61,56 +61,7 @@ class SAC:
     _discount_factor: float
     _polyak_factor: float
 
-    @classmethod
-    def init(
-        cls,
-        policy: nn.Module,
-        quality: nn.Module,
-        policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
-        quality_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
-        temperature_optimiser_init: Callable[[Iterable[Tensor]], Optimizer],
-        experience_replay: ExperienceReplay,
-        batch_size: int,
-        discount_factor: float,
-        target_entropy: float,
-        polyak_factor: float,  # Exponential smoothing
-        num_qualities: int = 2,
-        device: Optional[torch.device] = None,
-    ) -> "SAC":
-
-        policy = policy.to(device)
-        qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
-        # TODO: Why using log value of temperature in temperature loss are generally nicer?
-        # https://github.com/toshikwa/soft-actor-critic.pytorch/issues/2
-        log_temperature = torch.zeros(1, requires_grad=True, device=device)
-
-        policy_optimiser = policy_optimiser_init(policy.parameters())
-        quality_optimiser = quality_optimiser_init(
-            chain(*[quality.parameters() for quality in qualities])
-        )
-        temperature_optimiser = temperature_optimiser_init([log_temperature])
-
-        target_qualities = deepcopy(qualities)
-        # Freeze target quality networks with respect to optimisers (only update via Polyak averaging)
-        [net.requires_grad_(False) for net in target_qualities]
-
-        return cls(
-            policy,
-            qualities,
-            log_temperature,
-            target_qualities,
-            target_entropy,
-            policy_optimiser,
-            quality_optimiser,
-            temperature_optimiser,
-            experience_replay,
-            batch_size,
-            discount_factor,
-            polyak_factor,
-        )
-
     def _update_parameters(self) -> None:
-
         try:
             batch = self._experience_replay.sample(self._batch_size)
         except ValueError:
@@ -180,3 +131,50 @@ class SAC:
     ) -> None:
         self._experience_replay.push(state, action, reward, next_state, terminated)
         self._update_parameters()
+
+    @classmethod
+    def init(
+        cls,
+        policy: nn.Module,
+        quality: nn.Module,
+        policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
+        quality_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
+        temperature_optimiser_init: Callable[[Iterable[Tensor]], Optimizer],
+        experience_replay: ExperienceReplay,
+        batch_size: int,
+        discount_factor: float,
+        target_entropy: float,
+        polyak_factor: float,  # Exponential smoothing
+        num_qualities: int = 2,
+        device: Optional[torch.device] = None,
+    ) -> "SAC":
+        policy = policy.to(device)
+        qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
+        # TODO: Why using log value of temperature in temperature loss are generally nicer?
+        # https://github.com/toshikwa/soft-actor-critic.pytorch/issues/2
+        log_temperature = torch.zeros(1, requires_grad=True, device=device)
+
+        policy_optimiser = policy_optimiser_init(policy.parameters())
+        quality_optimiser = quality_optimiser_init(
+            chain(*[quality.parameters() for quality in qualities])
+        )
+        temperature_optimiser = temperature_optimiser_init([log_temperature])
+
+        target_qualities = deepcopy(qualities)
+        # Freeze target quality networks with respect to optimisers (only update via Polyak averaging)
+        [net.requires_grad_(False) for net in target_qualities]
+
+        return cls(
+            policy,
+            qualities,
+            log_temperature,
+            target_qualities,
+            target_entropy,
+            policy_optimiser,
+            quality_optimiser,
+            temperature_optimiser,
+            experience_replay,
+            batch_size,
+            discount_factor,
+            polyak_factor,
+        )

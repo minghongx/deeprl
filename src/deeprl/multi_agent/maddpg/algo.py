@@ -31,7 +31,6 @@ class Agent:
         discount_factor: float,
         polyak: float,
     ) -> None:
-
         self.policy = policy
         self.critic = critic
 
@@ -55,7 +54,6 @@ class MADDPG:
         experience_replay: ExperienceReplay,
         batch_size: int,
     ) -> None:
-
         self._agents = agents
         self._experience_replay = experience_replay
         self._batch_size = batch_size
@@ -68,7 +66,6 @@ class MADDPG:
         next_observation: Mapping[AgentID, Tensor],
         terminated: Mapping[AgentID, Tensor],
     ) -> None:
-
         self._experience_replay.push(
             observation, action, reward, next_observation, terminated
         )
@@ -78,7 +75,6 @@ class MADDPG:
             self._update_target_networks(agent_id)
 
     def _update_main_networks(self, agent_id: AgentID) -> None:
-
         try:
             batch = self._experience_replay.sample(self._batch_size)
         except ValueError:
@@ -124,7 +120,6 @@ class MADDPG:
 
     @torch.no_grad()
     def _update_target_networks(self, agent_id: AgentID) -> None:
-
         # Abbrivating for readability
         policy = self._agents[agent_id].policy
         critic = self._agents[agent_id].critic

@@ -48,7 +48,6 @@ class Actor(nn.Module):
 
 
 class Critic(nn.Module):
-
     Tensors = TypeVar("Tensors", Tuple[Tensor, ...], List[Tensor])
 
     def __init__(
@@ -74,7 +73,6 @@ class Critic(nn.Module):
         self._layers.apply(_init_weights)
 
     def forward(self, state: Tensors, actions: Tensors) -> Tensor:
-
         activation = torch.cat(state + actions, dim=1)
         for hidden_layer in self._layers[:-1]:
             activation = self._activation_fn(hidden_layer(activation))

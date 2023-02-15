@@ -9,7 +9,6 @@ from torch import Tensor
 
 @define
 class AdaptiveParameterNoise:
-
     stdev: float
     desired_stdev: float
     adoption_coeff: float

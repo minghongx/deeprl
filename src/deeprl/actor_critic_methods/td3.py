@@ -78,59 +78,7 @@ class TD3:
     _smoothing_noise_clip: float
     _policy_delay: cycle
 
-    @classmethod
-    def init(
-        cls,
-        policy: nn.Module,
-        quality: nn.Module,
-        policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
-        quality_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
-        experience_replay: ExperienceReplay,
-        batch_size: int,
-        discount_factor: float,
-        polyak_factor: float,
-        exploration_noise: Optional[ActionNoise],
-        smoothing_noise_stdev: float,
-        smoothing_noise_clip: float,  # Norm length to clip target policy smoothing noise
-        num_qualities: int = 2,
-        policy_delay: int = 2,
-        device: Optional[torch.device] = None,
-    ) -> "TD3":
-
-        policy = policy.to(device)
-        qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
-
-        policy_optimiser = policy_optimiser_init(policy.parameters())
-        quality_optimiser = quality_optimiser_init(
-            chain(*[quality.parameters() for quality in qualities])
-        )
-
-        target_policy = deepcopy(policy)
-        target_qualities = deepcopy(qualities)
-
-        # Freeze target networks with respect to optimisers (only update via Polyak averaging)
-        target_policy.requires_grad_(False)
-        [net.requires_grad_(False) for net in target_qualities]
-
-        return cls(
-            policy,
-            qualities,
-            target_policy,
-            target_qualities,
-            policy_optimiser,
-            quality_optimiser,
-            experience_replay,
-            batch_size,
-            discount_factor,
-            polyak_factor,
-            exploration_noise,
-            smoothing_noise_stdev,
-            smoothing_noise_clip,
-            cycle(range(policy_delay)),
-        )
-
     def _update_parameters(self) -> None:
-
         try:
             batch = self._experience_replay.sample(self._batch_size)
         except ValueError:
@@ -166,7 +114,6 @@ class TD3:
 
         # "Delayed" policy updates
         if next(self._policy_delay) == 0:
-
             # Improve the deterministic policy just by maximizing the first quality fn approximator by gradient ascent
             policy_loss: Tensor = -𝑄_[0](𝑠, 𝜇(𝑠)).mean()
             self._policy_optimiser.zero_grad()
@@ -199,3 +146,53 @@ class TD3:
     ) -> None:
         self._experience_replay.push(state, action, reward, next_state, terminated)
         self._update_parameters()
+
+    @classmethod
+    def init(
+        cls,
+        policy: nn.Module,
+        quality: nn.Module,
+        policy_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
+        quality_optimiser_init: Callable[[Iterator[Parameter]], Optimizer],
+        experience_replay: ExperienceReplay,
+        batch_size: int,
+        discount_factor: float,
+        polyak_factor: float,
+        exploration_noise: Optional[ActionNoise],
+        smoothing_noise_stdev: float,
+        smoothing_noise_clip: float,  # Norm length to clip target policy smoothing noise
+        num_qualities: int = 2,
+        policy_delay: int = 2,
+        device: Optional[torch.device] = None,
+    ) -> "TD3":
+        policy = policy.to(device)
+        qualities = [deepcopy(quality.to(device)) for _ in range(num_qualities)]
+
+        policy_optimiser = policy_optimiser_init(policy.parameters())
+        quality_optimiser = quality_optimiser_init(
+            chain(*[quality.parameters() for quality in qualities])
+        )
+
+        target_policy = deepcopy(policy)
+        target_qualities = deepcopy(qualities)
+
+        # Freeze target networks with respect to optimisers (only update via Polyak averaging)
+        target_policy.requires_grad_(False)
+        [net.requires_grad_(False) for net in target_qualities]
+
+        return cls(
+            policy,
+            qualities,
+            target_policy,
+            target_qualities,
+            policy_optimiser,
+            quality_optimiser,
+            experience_replay,
+            batch_size,
+            discount_factor,
+            polyak_factor,
+            exploration_noise,
+            smoothing_noise_stdev,
+            smoothing_noise_clip,
+            cycle(range(policy_delay)),
+        )
