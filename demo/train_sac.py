@@ -20,7 +20,7 @@ def train() -> None:
     action_dim = math.prod(env.action_space.shape)
 
     agent = SAC.init(
-        mlp.GaussianPolicy.init(obs_dim, action_dim, [256, 256]),
+        mlp.TanhGaussianPolicy.init(obs_dim, action_dim, [256, 256]),
         mlp.Quality.init(obs_dim, action_dim, [256, 256]),
         partial(optim.Adam, lr=3e-4),
         partial(optim.Adam, lr=3e-4),

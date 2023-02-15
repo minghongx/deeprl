@@ -12,7 +12,7 @@ from torch.types import Number
 
 
 @define(eq=False, slots=False)
-class GaussianPolicy(nn.Module):
+class TanhGaussianPolicy(nn.Module):
     """
     TODO
     Action scaling/unscaling
@@ -56,7 +56,7 @@ class GaussianPolicy(nn.Module):
         action_dim: int,
         hidden_dims: Sequence[int],
         actv_fn: Callable[[Tensor], Tensor] = F.relu,
-    ) -> "GaussianPolicy":
+    ) -> "TanhGaussianPolicy":
         lyrs = nn.ModuleList([nn.Linear(state_dim, hidden_dims[0])])
         lyrs.extend(
             [
