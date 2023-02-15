@@ -1,3 +1,4 @@
+- [ ] mypy and ruff should not lint based on the dev rqmts
 - [ ] `__all__` in each module
     - https://pytorch.org/docs/stable/_modules/torch/distributions/transforms.html
 - [ ] Replace pytest-cov with [coverage](https://github.com/nedbat/coveragepy)

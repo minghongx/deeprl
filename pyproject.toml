@@ -33,6 +33,7 @@ dependencies = [
   "torch",
   "cytoolz",
   "attrs",
+  "numpy",  # TODO: Should be removed after rewrite the experience replay module
 ]
 
 [project.optional-dependencies]
