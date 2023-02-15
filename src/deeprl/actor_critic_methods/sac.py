@@ -1,10 +1,4 @@
 """
-TODO 3.9
-Generic Alias Type and PEP 585.
-
-TODO
-Proper type hint for functools.partial.
-
 TODO
 How to understand differential entropy can be negative?
 https://en.wikipedia.org/wiki/Entropy_(information_theory)#Differential_entropy

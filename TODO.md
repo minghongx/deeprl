@@ -53,6 +53,20 @@ The above code uses
 to achieve concise dynamic configuration of the NN but lost sematics.
 
 
+### Python 3.9
+- [PEP 585](https://peps.python.org/pep-0585/) Type Hinting Generics
+
+
+### Python 3.10
+- [PEP 604](https://peps.python.org/pep-0604/) Writing `Union[X, Y]` as `X | Y`
+- [PEP 643](https://peps.python.org/pep-0634/) Convert multiple isinstance checks to structural pattern matching
+
+
+### Python 3.11
+- [Self Type](https://peps.python.org/pep-0673/)
+- [Variadic Generics](https://peps.python.org/pep-0646/)
+
+
 ---
 
 - [x] Improve algo classes init readability by attrs

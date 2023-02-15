@@ -1,16 +1,4 @@
 """
-TODO 3.9
-Generic Alias Type and PEP 585.
-
-TODO 3.10
-Adopt PEP 604.
-
-TODO 3.10
-Convert multiple isinstance checks to structural pattern matching (PEP 634).
-
-TODO
-Proper type hint for functools.partial.
-
 FIXME
 Hard-code action range
 
