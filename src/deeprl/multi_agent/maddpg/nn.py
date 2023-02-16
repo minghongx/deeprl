@@ -43,8 +43,7 @@ class Actor(nn.Module):
         activation = state
         for hidden_layer in self._layers[:-1]:
             activation = self._activation_fn(hidden_layer(activation))
-        action = self._output_fn(self._layers[-1](activation))
-        return action
+        return self._output_fn(self._layers[-1](activation))
 
 
 class Critic(nn.Module):
@@ -76,9 +75,7 @@ class Critic(nn.Module):
         activation = torch.cat(state + actions, dim=1)
         for hidden_layer in self._layers[:-1]:
             activation = self._activation_fn(hidden_layer(activation))
-        action_value = self._layers[-1](activation)
-
-        return action_value
+        return self._layers[-1](activation)
 
 
 @torch.no_grad()

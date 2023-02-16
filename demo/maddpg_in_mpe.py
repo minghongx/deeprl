@@ -41,23 +41,27 @@ agents = {
             env.action_space(agent_id).shape[0],
             hidden_dims,
             'relu',
-            'softmax').to(cuda),
+            'softmax',
+        ).to(cuda),
         Critic(
-            sum([env.observation_space(id).shape[0] for id in env.agents]),
-            sum([env.action_space(id).shape[0] for id in env.agents]),
+            sum(env.observation_space(id).shape[0] for id in env.agents),
+            sum(env.action_space(id).shape[0] for id in env.agents),
             hidden_dims,
-            'relu').to(cuda),
-        partial(optim.Adam, lr=lr_actor ),
+            'relu',
+        ).to(cuda),
+        partial(optim.Adam, lr=lr_actor),
         partial(optim.Adam, lr=lr_critic),
         discount_factor,
-        polyak
-    ) for agent_id in env.agents }
+        polyak,
+    )
+    for agent_id in env.agents
+}
 maddpg = MADDPG(agents, UER(memory_capacity), batch_size)
 
 for episode in range(num_episodes):
     observation = env.reset()
     observation = valmap(partial(torch.tensor, device=cuda), observation)
-    cumulative_reward = list()
+    cumulative_reward = []
 
     # for step in range(max_episode_steps):
     while True:

@@ -29,4 +29,4 @@ class Batch:
 
     def __attrs_post_init__(self) -> None:
         for attr, unstacked in zip(fields(Experience), zip(*self.experiences)):
-            setattr(self, attr.name + "s", torch.stack(unstacked))
+            setattr(self, f"{attr.name}s", torch.stack(unstacked))

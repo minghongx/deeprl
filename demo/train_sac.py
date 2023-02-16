@@ -35,7 +35,7 @@ def train() -> None:
 
     run = wandb.init(project="IntegTest")
 
-    for episode in range(100_000):
+    for _ in range(100_000):
         state, _ = env.reset()
         state = torch.tensor(state, device=device, dtype=torch.float32)
         episodic_return = torch.zeros(1, device=device)

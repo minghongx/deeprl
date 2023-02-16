@@ -52,7 +52,7 @@ def train(cfg: DictConfig) -> None:
     #     profile_memory=True,
     #     with_stack=True,
     # ) as profiler:
-    for episode in range(env_cfg.num_episodes):
+    for _ in range(env_cfg.num_episodes):
         state, _ = env.reset()
         state = torch.tensor(state, device=device, dtype=torch.float32)
         episodic_return = torch.zeros(1, device=device)
