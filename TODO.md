@@ -14,6 +14,15 @@
     - [Make protocols special objects at runtime rather than normal ABCs](https://peps.python.org/pep-0544/#make-protocols-special-objects-at-runtime-rather-than-normal-abcs)
 
 
+### Tests and exps
+https://github.com/AboudyKreidieh/h-baselines
+
+[watchfiles](https://github.com/samuelcolvin/watchfiles) calls OS API
+- linux: fsnotify
+- bsd: kqueue
+- win: ReadDirectoryChangeW
+
+
 ### Faster experience replay
 - [Pre-allocated and memory-mapped experience replay](https://discuss.pytorch.org/t/rfc-torchrl-replay-buffers-pre-allocated-and-memory-mapped-experience-replay/155335)
 - [segment tree C++ implementation](https://github.com/pytorch/rl/blob/main/torchrl/csrc/segment_tree.h)
