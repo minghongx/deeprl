@@ -49,6 +49,7 @@ dev = [
   "pettingzoo[mpe]",
   "hydra-core",
   "pydantic",
+  "pylint",  # pyreverse for generating UML package and class diagrams
 ]
 
 [tool.ruff]
