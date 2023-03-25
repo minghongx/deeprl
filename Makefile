@@ -7,7 +7,7 @@ SHELL = bash
 requirements-dev.txt:
 	# TODO: Bump pip-tools to >=7.0.0. See https://github.com/jazzband/pip-tools/issues/1659
 	# https://github.com/jazzband/pip-tools#updating-requirements
-	pip-compile --upgrade --extra=dev --output-file=requirements-dev.txt pyproject.toml
+	pip-compile --upgrade --extra=dev --resolver=backtracking --output-file=requirements-dev.txt pyproject.toml
 
 sync: requirements-dev.txt
 	pip-sync requirements-dev.txt
